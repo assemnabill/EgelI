@@ -1,0 +1,10 @@
+./resources/images/test
+./resources/images/train
+/resources/models/my_ssd_mobnet/*
+!/resources/models/my_ssd_mobnet/pipeline.config
+/resources/annotations/train.record
+/resources/annotations/test.record
+/resources/annotations/label_map.pbtxt
+/models/
+/.idea/
+/resources/pre-trained-models/

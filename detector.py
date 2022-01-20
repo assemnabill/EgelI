@@ -17,7 +17,7 @@ def detect_fn(image):
 
 
 # Images should be in the test folder
-def detect_from_img(image_path):
+def detect_from_img(image_path, threshold=0.8):
     category_index = label_map_util.create_category_index_from_labelmap(configs.files['LABELMAP'])
     img = cv2.imread(image_path)
     image_np = np.array(img)
@@ -44,7 +44,7 @@ def detect_from_img(image_path):
         category_index,
         use_normalized_coordinates=True,
         max_boxes_to_draw=5,
-        min_score_thresh=.5,
+        min_score_thresh=threshold,
         agnostic_mode=False)
     import matplotlib
     import matplotlib.pyplot as plt
@@ -53,6 +53,23 @@ def detect_from_img(image_path):
     plt.show()
     if configs.save_plots:
         plt.savefig(f'{image_path}')
+
+
+def test_all_images(base_dir=".\\resources\\images\\test", random_sequence=False, threshold=0.6):
+    for subdir, dirs, files in os.walk(base_dir):
+        if subdir == base_dir:
+            for img in images:
+                if img.endswith('xml'):
+                    images.remove(img)
+            i = 0
+            while i < len(files):
+                index = randrange(0, len(files)) if random_sequence else i
+                file = files[index]
+                try:
+                    detect_from_img(os.path.join(subdir, file), threshold=0.6)
+                    i = i + 1
+                except:
+                    pass
 
 
 def run():

@@ -2,11 +2,11 @@ import os
 from object_detection.builders import model_builder
 from object_detection.utils import config_util
 
-labels = ['Olaf Scholz', 'Annalena Baerbock', 'Christian Lindner',
-          'Joe Biden', 'Kamala Harris', 'Emmanuel Macron', 'Wladimir Putin',
-          'Elon Musk', 'Jeff Bezos', 'Karl Lauterbach', 'Leonardo DiCaprio',
-          'Oliver Welke', 'John Oliver', 'Jan Böhmermann',
-          'Trevor Noah', 'Jennifer Lawrence']
+labels = ['OlafScholz', 'AnnalenaBaerbock', 'ChristianLindner',
+          'JoeBiden', 'KamalaHarris', 'EmmanuelMacron', 'WladimirPutin',
+          'ElonMusk', 'JeffBezos', 'KarlLauterbach', 'LeonardoDiCaprio',
+          'OliverWelke', 'JohnOliver', 'JanBöhmermann',
+          'TrevorNoah', 'JenniferLawrence']
 
 
 pretrained_models_uri = {
