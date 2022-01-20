@@ -20,8 +20,6 @@ Usage: egeli.py [options]
 	 -e, --evaluate=   	 set boolean value to enable evaluation using tensor board
 
 	 -d, --detect=     	 set boolean value to enable detection. Images of faces to be detected should be placed in images/test folder
-
-
 ```
 
 ## Add new Pretrained Model
