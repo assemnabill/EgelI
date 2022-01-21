@@ -28,7 +28,9 @@ def usage():
     print('\t -e, --evaluate=   \t set boolean value to enable evaluation using tensor board\n')
     print('\t -d, --detect=     \t set boolean value to enable detection. ')
     print('\t -v, --verify-install=     \t set boolean value to disable installation verification. ')
-    print('\t -r, --generate-records=     \t set boolean value to disable tf record generation. '
+    print('\t -r, --generate-records=     \t set boolean value to disable tf record generation. ')
+    print('\t -c, --checkpoint=     \t set checkpoint to detect from. ')
+    print('\t -t, --threshold=     \t set detection threshold (minimum score from which a label is drawn). '
           'Images of faces to be detected should be placed in images/test folder\n')
 
 
@@ -39,9 +41,10 @@ def run_cmd(cmd):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:",
+        opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:c:o:a:",
                                    ["--model-name=", "--pre-trained=", "--steps=", "--train=", "--evaluate=",
-                                    "--detect=", "--save-plots=", "--verify-install=", "--generate-records="])
+                                    "--detect=", "--save-plots=", "--verify-install=", "--generate-records=",
+                                    "--checkpoint=", "--threshold=", "--random="])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -72,6 +75,12 @@ def main(argv):
             configs.verify_installation = parse_boolean(arg)
         elif opt in ("-r", "--generate-records"):
             configs.generate_records = parse_boolean(arg)
+        elif opt in ("-c", "--checkpoint"):
+            configs.checkpoint = arg
+        elif opt in ("-o", "--threshold"):
+            configs.detection_threshold = float(arg)
+        elif opt in ("-a", "--random-detection"):
+            configs.random_detection = parse_boolean(arg)
 
     print(f'Model name is  {configs.custom_model_name}')
     print(f'Pretrained model => {configs.pretrained_model_name}')
@@ -97,7 +106,8 @@ def main(argv):
         'LABELMAP': os.path.join(configs.paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
     }
 
-    trainer.run()
+    if configs.training_enabled:
+        trainer.run()
     if configs.detection_enabled:
         detector.run()
 

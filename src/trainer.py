@@ -79,7 +79,7 @@ def generate_tf_records():
         create_labels_map()
     else:
         key = input("Already found label map! (" + configs.files["LABELMAP"] + ") Do you want to recreate it? (Y|n)")
-        if not str(key).lower() is "n":
+        if not str(key).lower() == "n":
             create_labels_map()
 
     print('Generating tf record..')
@@ -91,7 +91,7 @@ def generate_tf_records():
     train_record_path = os.path.join(configs.paths["ANNOTATION_PATH"], "train.record")
     if os.path.exists(train_record_path):
         key = input("Already found train.record! ("+train_record_path+") Do you want to recreate it? (Y|n)")
-        if not str(key).lower() is "n":
+        if not str(key).lower() == "n":
             cmd = 'python {} -x {} -l {} -o {}' \
                 .format(configs.files["TF_RECORD_SCRIPT"], train_images_path,
                         configs.files["LABELMAP"], train_record_path)
@@ -107,7 +107,7 @@ def generate_tf_records():
     test_record_path = os.path.join(configs.paths["ANNOTATION_PATH"], "test.record")
     if os.path.exists(train_record_path):
         key = input("Already found test.record! (" + test_record_path + ") Do you want to recreate it? (Y|n)")
-        if not str(key).lower() is "n":
+        if not str(key).lower() == "n":
             cmd = 'python {} -x {} -l {} -o {}' \
                 .format(configs.files["TF_RECORD_SCRIPT"], test_images_path,
                         configs.files["LABELMAP"], test_record_path)

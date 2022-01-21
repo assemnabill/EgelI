@@ -10,7 +10,7 @@ import numpy as np
 import configs
 
 
-@tf.function
+@tf.function(experimental_relax_shapes=True)
 def detect_fn(image):
     image, shapes = configs.detection_model.preprocess(image)
     prediction_dict = configs.detection_model.predict(image, shapes)
@@ -52,16 +52,16 @@ def detect_from_img(image_path, threshold=0.8):
     import matplotlib.pyplot as plt
     matplotlib.use('TkAgg')
     plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
-    plt.show()
+    plt.show(block=True)
     if configs.save_plots:
         plt.savefig(f'{image_path}')
 
 
-def test_all_images(base_dir=".\\resources\\images\\test", random_sequence=False, threshold=0.6):
+def test_all_images(base_dir=os.path.join("resources", "images", "test"), random_sequence=False, threshold=0.6):
     for subdir, dirs, files in os.walk(base_dir):
         if subdir == base_dir:
             for img in files:
-                if img.endswith('xml'):
+                if img.endswith('xml') or not (img.lower().endswith('jpg') or img.lower().endswith('jpeg') or img.lower().endswith('png')):
                     files.remove(img)
             i = 0
             while i < len(files):
@@ -74,20 +74,30 @@ def test_all_images(base_dir=".\\resources\\images\\test", random_sequence=False
                     pass
 
 
-def run():
+def load_train_model_from_checkpoint(checkpoint):
+    import os
+    import tensorflow as tf
+    from object_detection.builders import model_builder
+    from object_detection.utils import config_util
+
+    # Load pipeline config and build a detection model
+    pipeline_config = config_util.get_configs_from_pipeline_file(configs.files['PIPELINE_CONFIG'])
+    detection_model = model_builder.build(model_config=pipeline_config['model'], is_training=False)
+
+    # Restore checkpoint
     print('Restore checkpoint...')
-    ckpt = tf.compat.v2.train.Checkpoint(configs.detection_model)
-    index = os.listdir(configs.paths["CHECKPOINT_PATH"])
-    index.reverse()
-    checkpoint = index.pop().replace(".index", "")
+    ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
     ckpt.restore(os.path.join(configs.paths['CHECKPOINT_PATH'], checkpoint)).expect_partial()
 
-    images = os.listdir(os.path.join(configs.paths["IMAGE_PATH"], "test"))
+    return detection_model
 
-    for img in images:
-        if img.endswith('xml'):
-            images.remove(img)
 
-    for img in images:
-        image_path = os.path.join(configs.paths['IMAGE_PATH'], 'test', img)
-        detect_from_img(image_path)
+def run():
+    index = os.listdir(configs.paths["CHECKPOINT_PATH"])
+    index.reverse()
+    checkpoint = index.pop().replace(".index", "") if configs.checkpoint is None else configs.checkpoint
+    configs.detection_model = load_train_model_from_checkpoint(checkpoint)
+
+    print("Detection threshold set to", configs.detection_threshold)
+    print("Random detection sequence set to", configs.random_detection)
+    test_all_images(threshold=configs.detection_threshold, random_sequence=configs.random_detection)

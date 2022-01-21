@@ -16,10 +16,10 @@ ymin_placeholder = "[YMIN]"
 xmax_placeholder = "[XMAX]"
 ymax_placeholder = "[YMAX]"
 
-base_folder = os.path.join(".", "resources", "images", "collected images")
-test_folder = os.path.join(".", "resources", "images", "test")
-train_folder = os.path.join(".", "resources", "images", "train")
-default_xml_path = os.path.join(".", "resources", "EXAMPLE.xml")
+base_folder = os.path.join("..", "resources", "images", "collected images")
+test_folder = os.path.join("..", "resources", "images", "test")
+train_folder = os.path.join("..", "resources", "images", "train")
+default_xml_path = os.path.join("..", "resources", "EXAMPLE.xml")
 
 
 def read_xml_content():
@@ -59,7 +59,7 @@ def detect_face(img_path, show_image=False):
     import cv2
 
     # Load the cascade
-    face_cascade = cv2.CascadeClassifier(os.path.join(".", "resources", "haarcascade_frontalface_default.xml'"))
+    face_cascade = cv2.CascadeClassifier(os.path.join("..", "resources", "haarcascade_frontalface_default.xml'"))
     # Read the input image
     img = cv2.imread(img_path)
     (ytot, xtot, depth) = img.shape
