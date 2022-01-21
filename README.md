@@ -25,7 +25,13 @@ Usage: egeli.py [options]
 ## Add new Pretrained Model
 
 1. Go to [TensorFlow 2 Detection Model Zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md)
-1. Choose a model then copy it's download link
-1. Go to configs.py and add it to `pretrained_models_uri` Map
-1. Call the Script with `-p <model_name>`
-1. Have fun!
+2. Choose a model then copy it's download link
+3. Go to configs.py and add it to `pretrained_models_uri` Map
+4. Call the Script with `-p <model_name>`
+5. Have fun!
+
+## Retrain model from scratch
+
+1. Delete everything in the relevant model folder under `./resources/models/[MODEL_NAME]` except `pipeline.config`.
+2. Retrain.
+3. Have fun!
