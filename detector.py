@@ -1,4 +1,6 @@
 import os
+from random import randrange
+
 import tensorflow as tf
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
@@ -58,15 +60,15 @@ def detect_from_img(image_path, threshold=0.8):
 def test_all_images(base_dir=".\\resources\\images\\test", random_sequence=False, threshold=0.6):
     for subdir, dirs, files in os.walk(base_dir):
         if subdir == base_dir:
-            for img in images:
+            for img in files:
                 if img.endswith('xml'):
-                    images.remove(img)
+                    files.remove(img)
             i = 0
             while i < len(files):
                 index = randrange(0, len(files)) if random_sequence else i
                 file = files[index]
                 try:
-                    detect_from_img(os.path.join(subdir, file), threshold=0.6)
+                    detect_from_img(os.path.join(subdir, file), threshold=threshold)
                     i = i + 1
                 except:
                     pass

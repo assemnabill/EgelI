@@ -4,49 +4,54 @@ import wget
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 import configs
-from configs import *
 
 
 def evaluate_model(training_script):
-    print('Evaluating the model..')
-    command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
-        .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
-                configs.paths['CHECKPOINT_PATH'])
-    if configs.evaluation_enabled:
+    if configs.evaluation_enabled or configs.training_enabled:
+        print('Evaluating the model..')
+        command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
+            .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
+                    configs.paths['CHECKPOINT_PATH'])
         run_cmd(command)
         # run_cmd(f'cd {os.path.join(configs.paths["CHECKPOINT_PATH"], "train")} && tensorboard --logdir=.')
     else:
+        command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
+            .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
+                    configs.paths['CHECKPOINT_PATH'])
+        run_cmd(command)
+        print('Not evaluating the model..')
         print(command)
 
 
 def train_model(training_script, steps=None):
-    print('Training the model...')
-    command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={}" \
-        .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'], configs.training_steps if steps == None else steps)
     if configs.training_enabled:
+        print('Training the model...')
+        command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={}" \
+            .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
+                    configs.training_steps if steps == None else steps)
         run_cmd(command)
     else:
-        print(command)
+        print('Not training the model...')
 
 
 def config_model():
     print('Copy Model Config to Training Folder..')
     cmd = 'cp {} {}'.format(
-        os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], pretrained_model_name, "pipeline.config"),
+        os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name, "pipeline.config"),
         os.path.join(configs.paths["CHECKPOINT_PATH"]))
     run_cmd(cmd)
 
     print('Update Config For Transfer Learning..')
-    configs.pipeline_configs = config_util.get_configs_from_pipeline_file(files['PIPELINE_CONFIG'])
+    configs.pipeline_configs = configs.config_util.get_configs_from_pipeline_file(configs.files['PIPELINE_CONFIG'])
     pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
     with tf.io.gfile.GFile(configs.files['PIPELINE_CONFIG'], "r") as f:
         proto_str = f.read()
         text_format.Merge(proto_str, pipeline_config)
 
-    pipeline_config.model.ssd.num_classes = len(labels)
+    pipeline_config.model.ssd.num_classes = len(configs.labels)
     pipeline_config.train_config.batch_size = 4
     pipeline_config.train_config.fine_tune_checkpoint = os.path \
-        .join(configs.paths['PRETRAINED_MODEL_PATH'], pretrained_model_name, 'checkpoint', 'ckpt-0')
+        .join(configs.paths['PRETRAINED_MODEL_PATH'], configs.pretrained_model_name, 'checkpoint', 'ckpt-0')
     pipeline_config.train_config.fine_tune_checkpoint_type = "detection"
     pipeline_config.train_input_reader.label_map_path = configs.files['LABELMAP']
     pipeline_config.train_input_reader.tf_record_input_reader.input_path[:] = [
@@ -81,7 +86,7 @@ def create_labels_map():
     print('Creating label map..')
     labels_map = []
     tmp_id = 1
-    for label in labels:
+    for label in configs.labels:
         labels_map.append({'name': label, 'id': tmp_id})
         tmp_id += 1
     if os.path.exists(configs.files['LABELMAP']):
@@ -139,19 +144,19 @@ def upgrade_tf():
 
 def set_up():
     # print('Download TF Models, Pretrained Models from Tensorflow Model Zoo and Install TFOD')
-    for path in paths.values():
+    for path in configs.paths.values():
         if not os.path.exists(path):
             if os.name == 'posix':
                 run_cmd(f'mkdir -p {path}')
             if os.name == 'nt':
                 run_cmd(f'mkdir {path}')
 
-    path = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection')
+    path = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection')
     if not os.path.exists(path):
         print('Found no Object detection Models')
 
         print('cloning models from TF Repo..')
-        cmd = 'git clone {} {}'.format("https://github.com/tensorflow/models", paths["APIMODEL_PATH"])
+        cmd = 'git clone {} {}'.format("https://github.com/tensorflow/models", configs.paths["APIMODEL_PATH"])
         run_cmd(cmd)
     else:
         print(f'Object detection Models found in {path}')
@@ -170,12 +175,12 @@ def load_train_model_from_checkpoint(checkpoint):
     from object_detection.utils import config_util
 
     # Load pipeline config and build a detection model
-    configs = config_util.get_configs_from_pipeline_file(files['PIPELINE_CONFIG'])
-    detection_model = model_builder.build(model_config=configs['model'], is_training=False)
+    pipeline_configs = config_util.get_configs_from_pipeline_file(configs.files['PIPELINE_CONFIG'])
+    detection_model = model_builder.build(model_config=pipeline_configs['model'], is_training=False)
 
     # Restore checkpoint
     ckpt = tf.compat.v2.train.Checkpoint(model=detection_model)
-    ckpt.restore(os.path.join(paths['CHECKPOINT_PATH'], checkpoint)).expect_partial()
+    ckpt.restore(os.path.join(configs.paths['CHECKPOINT_PATH'], checkpoint)).expect_partial()
 
     return detection_model
 
@@ -185,9 +190,9 @@ def init():
 
     verify_installation()
 
-    upgrade_tf()
+    #upgrade_tf()
 
-    download_pretrained_models()
+    #download_pretrained_models()
 
 
 def create_basic_data():
@@ -200,12 +205,12 @@ def create_basic_data():
 
 
 def run():
-    init()
+    #init()
 
-    create_basic_data()
+    #create_basic_data()
 
     training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
 
-    train_model(training_script)
+    train_model(training_script, steps=5000)
 
     evaluate_model(training_script)
