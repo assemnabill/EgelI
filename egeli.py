@@ -26,15 +26,21 @@ def usage():
     print('\t -s, --steps=      \t set the count of steps for training\n')
     print('\t -t, --train=      \t set boolean value to enable training\n')
     print('\t -e, --evaluate=   \t set boolean value to enable evaluation using tensor board\n')
-    print('\t -d, --detect=     \t set boolean value to enable detection. '
+    print('\t -d, --detect=     \t set boolean value to enable detection. ')
+    print('\t -v, --verify-install=     \t set boolean value to disable installation verification. ')
+    print('\t -r, --generate-records=     \t set boolean value to disable tf record generation. '
           'Images of faces to be detected should be placed in images/test folder\n')
 
 
+def run_cmd(cmd):
+    print(f'Running {cmd}')
+    return os.system(cmd)
+
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:",
+        opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:",
                                    ["--model-name=", "--pre-trained=", "--steps=", "--train=", "--evaluate=",
-                                    "--detect=", "--save-plots="])
+                                    "--detect=", "--save-plots=", "--verify-install=", "--generate-records="])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -61,6 +67,11 @@ def main(argv):
             configs.detection_enabled = parse_boolean(arg)
         elif opt in ("-p", "--save-plots"):
             configs.save_plots = parse_boolean(arg)
+        elif opt in ("-v", "--verify-install"):
+            configs.verify_installation = parse_boolean(arg)
+        elif opt in ("-r", "--generate-records"):
+            configs.generate_records = parse_boolean(arg)
+
     print(f'Model name is  {configs.custom_model_name}')
     print(f'Pretrained model => {configs.pretrained_model_name}')
 

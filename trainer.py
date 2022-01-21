@@ -1,10 +1,13 @@
 import os.path
+import sys
+
 import tensorflow as tf
 import wget
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 import configs
 from object_detection.builders import model_builder
+from egeli import run_cmd
 
 def evaluate_model(training_script):
     command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
@@ -65,21 +68,52 @@ def config_model():
         f.write(config_text)
 
 
-def generate_tf_record():
+def generate_tf_records():
     if not os.path.exists(configs.files['TF_RECORD_SCRIPT']):
         print('Downloading tf record generator script..')
         cmd = f'git clone https://github.com/nicknochnack/GenerateTFRecord {configs.paths["SCRIPTS_PATH"]}'
         run_cmd(cmd)
 
+    if not os.path.exists(configs.files["LABELMAP"]):
+        print("Label map not existing! Creating!")
+        create_labels_map()
+    else:
+        key = input("Already found label map! (" + configs.files["LABELMAP"] + ") Do you want to recreate it? (Y|n)")
+        if not str(key).lower() is "n":
+            create_labels_map()
+
     print('Generating tf record..')
-    cmd = 'python {} -x {} -l {} -o {}' \
-        .format(configs.files["TF_RECORD_SCRIPT"], os.path.join(configs.paths["IMAGE_PATH"], "train"),
-                configs.files["LABELMAP"], os.path.join(configs.paths["ANNOTATION_PATH"], "train.record"))
-    run_cmd(cmd)
-    cmd = 'python {} -x {} -l {} -o {}' \
-        .format(configs.files["TF_RECORD_SCRIPT"], os.path.join(configs.paths["IMAGE_PATH"], "test"),
-                configs.files["LABELMAP"], os.path.join(configs.paths["ANNOTATION_PATH"], "test.record"))
-    run_cmd(cmd)
+
+    train_images_path = os.path.join(configs.paths["IMAGE_PATH"], "train")
+    if not os.path.exists(train_images_path):
+        print("No train images folder found! (" + train_images_path + ")! Aborting generation of tf_record!", file=sys.stderr)
+
+    train_record_path = os.path.join(configs.paths["ANNOTATION_PATH"], "train.record")
+    if os.path.exists(train_record_path):
+        key = input("Already found train.record! ("+train_record_path+") Do you want to recreate it? (Y|n)")
+        if not str(key).lower() is "n":
+            cmd = 'python {} -x {} -l {} -o {}' \
+                .format(configs.files["TF_RECORD_SCRIPT"], train_images_path,
+                        configs.files["LABELMAP"], train_record_path)
+            run_cmd(cmd)
+        else:
+            print("Not creating train.record!")
+
+    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    if not os.path.exists(test_images_path):
+        print("No test images folder found! (" + test_images_path + ")! Aborting generation of tf_record!",
+              file=sys.stderr)
+
+    test_record_path = os.path.join(configs.paths["ANNOTATION_PATH"], "test.record")
+    if os.path.exists(train_record_path):
+        key = input("Already found test.record! (" + test_record_path + ") Do you want to recreate it? (Y|n)")
+        if not str(key).lower() is "n":
+            cmd = 'python {} -x {} -l {} -o {}' \
+                .format(configs.files["TF_RECORD_SCRIPT"], test_images_path,
+                        configs.files["LABELMAP"], test_record_path)
+            run_cmd(cmd)
+        else:
+            print("Not creating test.record...")
 
 
 def create_labels_map():
@@ -115,24 +149,6 @@ def download_pretrained_models():
     run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && mkdir {configs.pretrained_model_name}')
     run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && tar -zxvf {tar_name} -C {configs.pretrained_model_name} --strip-components 1')
 
-
-def verify_installation(installed_protobuf=False):
-    print('Verify Installation..')
-    verification_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'builders',
-                                       'model_builder_tf2_test.py')
-    cmd = 'python {}'.format(verification_script)
-    status_code = run_cmd(cmd)
-    print(f'process exited with status code {status_code}')
-
-    if (not installed_protobuf) & (status_code > 0):
-        run_cmd('pip uninstall protobuf matplotlib -y')
-        run_cmd('pip install protobuf matplotlib==3.2')
-        verify_installation(True)
-
-
-def run_cmd(cmd):
-    print(f'Running {cmd}')
-    return os.system(cmd)
 
 
 def upgrade_tf():
@@ -184,28 +200,41 @@ def load_train_model_from_checkpoint(checkpoint):
     return detection_model
 
 
+def verify_installation(installed_protobuf=False):
+    print('Verify Installation..')
+    verification_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'builders',
+                                       'model_builder_tf2_test.py')
+    cmd = 'python {}'.format(verification_script)
+    status_code = run_cmd(cmd)
+    print(f'process exited with status code {status_code}')
+
+    if (not installed_protobuf) & (status_code > 0):
+        run_cmd('pip uninstall protobuf matplotlib -y')
+        run_cmd('pip install protobuf matplotlib==3.2')
+        verify_installation(True)
+
+
 def init():
     set_up()
 
-    #verify_installation()
+    upgrade_tf()
 
-    #upgrade_tf()
-
-
-def create_records():
-    create_labels_map()
-    generate_tf_record()
+    if configs.verify_installation:
+        verify_installation()
 
 
-def check_models():
+def verify_model_state():
     download_pretrained_models()
     config_model()
 
-def run():
-    #init()
 
-    check_models()
-    #create_records()
+def run():
+    init()
+
+    verify_model_state()
+
+    if configs.generate_records:
+        generate_tf_records()
 
     training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
 

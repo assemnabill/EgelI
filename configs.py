@@ -7,14 +7,15 @@ labels = ['AnnalenaBaerbock', 'ChristianLindner', 'ElonMusk']
 
 pretrained_models_uri = {
     'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8.tar.gz',
-    'centernet_mobilenetv2fpn_512x512_coco17_od': 'http://download.tensorflow.org/models/object_detection/tf2/20210210/centernet_mobilenetv2fpn_512x512_coco17_od.tar.gz',
-    'centernet_resnet50_v2_512x512_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/centernet_resnet50_v2_512x512_coco17_tpu-8.tar.gz'
+    'ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8.tar.gz'
 }
 
 training_enabled = False
 evaluation_enabled = False
 detection_enabled = False
 save_plots = False
+verify_installation = True
+generate_records = False
 training_steps = 2000
 pretrained_model_name = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8'
 pretrained_model_url = pretrained_models_uri[pretrained_model_name]
