@@ -44,9 +44,12 @@ def main(argv):
             usage()
             sys.exit()
         elif opt in ("-n", "--model-name"):
-            configs.custom_model_name = arg
+            configs.pretrained_model_name = arg
+            configs.custom_model_name = f'my_custom_model-{configs.pretrained_model_name}'
+            configs.pretrained_model_url = pretrained_models_uri[configs.pretrained_model_name]
         elif opt in ("-m", "--pre-trained"):
             configs.pretrained_model_name = arg
+            configs.custom_model_name = f'my_custom_model-{configs.pretrained_model_name}'
             configs.pretrained_model_url = pretrained_models_uri[configs.pretrained_model_name]
         elif opt in ("-s", "--steps"):
             configs.training_steps = arg
@@ -81,9 +84,6 @@ def main(argv):
         'TF_RECORD_SCRIPT': os.path.join(configs.paths['SCRIPTS_PATH'], TF_RECORD_SCRIPT_NAME),
         'LABELMAP': os.path.join(configs.paths['ANNOTATION_PATH'], LABEL_MAP_NAME)
     }
-
-    configs.pipeline_configs = config_util.get_configs_from_pipeline_file(configs.files['PIPELINE_CONFIG'])
-    configs.detection_model = model_builder.build(pipeline_configs['model'], False)
 
     trainer.run()
     if configs.detection_enabled:

@@ -9,9 +9,9 @@ module fundamentals of artificial intelligence at THM university of applied scie
 ```
 Usage: egeli.py [options]
 
-	 -n, --model-name= 	 set a custom model name
+	 -n, --model-name=, m, --pre-trained= 	 set a custom model name for training and testing
 
-	 -p, --pre-trained=	 the pretrained model to use in training
+	 -p, --save-plots=	 save plots of recognized labels
 
 	 -s, --steps=      	 set the count of steps for training
 
@@ -27,7 +27,7 @@ Usage: egeli.py [options]
 1. Go to [TensorFlow 2 Detection Model Zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md)
 2. Choose a model then copy it's download link
 3. Go to configs.py and add it to `pretrained_models_uri` Map
-4. Call the Script with `-p <model_name>`
+4. Call the Script with `-n <model_name>`
 5. Have fun!
 
 ## Retrain model from scratch

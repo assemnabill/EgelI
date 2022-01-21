@@ -1,5 +1,4 @@
 import os
-from object_detection.builders import model_builder
 from object_detection.utils import config_util
 
 #labels = ['OlafScholz', 'AnnalenaBaerbock', 'ChristianLindner', 'JoeBiden', 'KamalaHarris', 'EmmanuelMacron', 'WladimirPutin', 'ElonMusk', 'JeffBezos', 'KarlLauterbach', 'LeonardoDiCaprio', 'OliverWelke', 'JohnOliver', 'JanBöhmermann', 'TrevorNoah', 'JenniferLawrence']
@@ -9,6 +8,7 @@ labels = ['AnnalenaBaerbock', 'ChristianLindner', 'ElonMusk']
 pretrained_models_uri = {
     'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu.tar.gz',
     'centernet_mobilenetv2fpn_512x512_coco17_od': 'http://download.tensorflow.org/models/object_detection/tf2/20210210/centernet_mobilenetv2fpn_512x512_coco17_od.tar.gz',
+    'centernet_resnet50_v2_512x512_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/centernet_resnet50_v2_512x512_coco17_tpu-8.tar.gz'
 }
 
 training_enabled = False
@@ -29,7 +29,7 @@ files = {
 
 # Load Train Model From Checkpoint
 # Load pipeline config and build a detection model
-pipeline_configs = config_util.get_configs_from_pipeline_file(files['PIPELINE_CONFIG'])
-detection_model = model_builder.build(pipeline_configs['model'], False)
+pipeline_configs = None
+detection_model = None
 
 

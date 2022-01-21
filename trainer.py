@@ -4,31 +4,29 @@ import wget
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 import configs
-
+from object_detection.builders import model_builder
 
 def evaluate_model(training_script):
+    command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
+        .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
+                configs.paths['CHECKPOINT_PATH'])
     if configs.evaluation_enabled or configs.training_enabled:
         print('Evaluating the model..')
-        command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
-            .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
-                    configs.paths['CHECKPOINT_PATH'])
         run_cmd(command)
         # run_cmd(f'cd {os.path.join(configs.paths["CHECKPOINT_PATH"], "train")} && tensorboard --logdir=.')
     else:
-        command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
-            .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
-                    configs.paths['CHECKPOINT_PATH'])
-        run_cmd(command)
         print('Not evaluating the model..')
         print(command)
 
 
 def train_model(training_script, steps=None):
+    command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={}" \
+        .format(training_script,
+                configs.paths['CHECKPOINT_PATH'],
+                configs.files['PIPELINE_CONFIG'],
+                configs.training_steps if steps is None else steps)
     if configs.training_enabled:
         print('Training the model...')
-        command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={}" \
-            .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
-                    configs.training_steps if steps == None else steps)
         run_cmd(command)
     else:
         print('Not training the model...')
@@ -43,6 +41,7 @@ def config_model():
 
     print('Update Config For Transfer Learning..')
     configs.pipeline_configs = configs.config_util.get_configs_from_pipeline_file(configs.files['PIPELINE_CONFIG'])
+    configs.detection_model = model_builder.build(configs.pipeline_configs['model'], False)
     pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
     with tf.io.gfile.GFile(configs.files['PIPELINE_CONFIG'], "r") as f:
         proto_str = f.read()
@@ -100,21 +99,25 @@ def create_labels_map():
 
 
 def download_pretrained_models():
-    path = os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name + ".tar.gz")
-    if os.path.exists(path):
-        print(f'Found pretrained model at {path}')
+    tarPath = os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name + ".tar.gz")
+    if os.path.exists(tarPath):
+        print(f'Found pretrained model at {tarPath}')
+    else:
+        print('Downloading pretrained model..')
+        if os.name == 'posix':
+            res = run_cmd(f'wget {configs.pretrained_model_url}')
+            if res > 0:
+                exit(res)
+        elif os.name == 'nt':
+            res = wget.download(configs.pretrained_model_url)
+            if res.__len__() < 1:
+                exit(1)
+    folderPath = os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name)
+    if os.path.isdir(folderPath):
         return
-    print('Downloading pretrained model..')
-    if os.name == 'posix':
-        res = run_cmd(f'wget {configs.pretrained_model_url}')
-        if res > 0:
-            exit(res)
-    elif os.name == 'nt':
-        res = wget.download(configs.pretrained_model_url)
-        if res.__len__() < 1:
-            exit(1)
     run_cmd(f'mv {configs.pretrained_model_name + ".tar.gz"} {configs.paths["PRETRAINED_MODEL_PATH"]}')
-    run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && tar -zxvf {configs.pretrained_model_name + ".tar.gz"}')
+    run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && mkdir {configs.pretrained_model_name}')
+    run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && tar -zxvf {configs.pretrained_model_name + ".tar.gz"} -C {configs.pretrained_model_name} --strip-components 1')
 
 
 def verify_installation(installed_protobuf=False):
@@ -188,26 +191,25 @@ def load_train_model_from_checkpoint(checkpoint):
 def init():
     set_up()
 
-    verify_installation()
+    #verify_installation()
 
     #upgrade_tf()
 
-    #download_pretrained_models()
 
-
-def create_basic_data():
-
+def create_records():
     create_labels_map()
-
     generate_tf_record()
 
-    config_model()
 
+def check_models():
+    download_pretrained_models()
+    config_model()
 
 def run():
     #init()
 
-    #create_basic_data()
+    check_models()
+    #create_records()
 
     training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
 
