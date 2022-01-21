@@ -36,6 +36,7 @@ def run_cmd(cmd):
     print(f'Running {cmd}')
     return os.system(cmd)
 
+
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:",
