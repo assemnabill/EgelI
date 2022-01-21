@@ -211,6 +211,6 @@ def run():
 
     training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
 
-    train_model(training_script, steps=5000)
+    train_model(training_script)
 
     evaluate_model(training_script)
