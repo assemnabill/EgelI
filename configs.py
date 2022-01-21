@@ -6,7 +6,7 @@ labels = ['AnnalenaBaerbock', 'ChristianLindner', 'ElonMusk']
 
 
 pretrained_models_uri = {
-    'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu.tar.gz',
+    'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8.tar.gz',
     'centernet_mobilenetv2fpn_512x512_coco17_od': 'http://download.tensorflow.org/models/object_detection/tf2/20210210/centernet_mobilenetv2fpn_512x512_coco17_od.tar.gz',
     'centernet_resnet50_v2_512x512_coco17_tpu-8': 'http://download.tensorflow.org/models/object_detection/tf2/20200711/centernet_resnet50_v2_512x512_coco17_tpu-8.tar.gz'
 }
@@ -26,6 +26,11 @@ paths = {}
 files = {
     'PIPELINE_CONFIG': os.path.join('resources', 'models', custom_model_name, 'pipeline.config')
 }
+
+def get_model_tar_name():
+    tar_name = str(pretrained_models_uri[pretrained_model_name])
+    tar_name = tar_name[tar_name.rindex("/") + 1:]
+    return tar_name
 
 # Load Train Model From Checkpoint
 # Load pipeline config and build a detection model

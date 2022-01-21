@@ -34,6 +34,7 @@ def train_model(training_script, steps=None):
 
 def config_model():
     print('Copy Model Config to Training Folder..')
+    run_cmd(f'mkdir {configs.paths["CHECKPOINT_PATH"]}')
     cmd = 'cp {} {}'.format(
         os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name, "pipeline.config"),
         os.path.join(configs.paths["CHECKPOINT_PATH"]))
@@ -99,25 +100,20 @@ def create_labels_map():
 
 
 def download_pretrained_models():
-    tarPath = os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name + ".tar.gz")
-    if os.path.exists(tarPath):
-        print(f'Found pretrained model at {tarPath}')
+    tar_name = configs.get_model_tar_name()
+    tar_path = os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], tar_name)
+    if os.path.exists(tar_path):
+        print(f'Found pretrained model at {tar_path}')
     else:
         print('Downloading pretrained model..')
-        if os.name == 'posix':
-            res = run_cmd(f'wget {configs.pretrained_model_url}')
-            if res > 0:
-                exit(res)
-        elif os.name == 'nt':
-            res = wget.download(configs.pretrained_model_url)
-            if res.__len__() < 1:
-                exit(1)
+        res = wget.download(configs.pretrained_model_url, out=configs.paths["PRETRAINED_MODEL_PATH"])
+        if res.__len__() < 1:
+            exit(1)
     folderPath = os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name)
     if os.path.isdir(folderPath):
         return
-    run_cmd(f'mv {configs.pretrained_model_name + ".tar.gz"} {configs.paths["PRETRAINED_MODEL_PATH"]}')
     run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && mkdir {configs.pretrained_model_name}')
-    run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && tar -zxvf {configs.pretrained_model_name + ".tar.gz"} -C {configs.pretrained_model_name} --strip-components 1')
+    run_cmd(f'cd {configs.paths["PRETRAINED_MODEL_PATH"]} && tar -zxvf {tar_name} -C {configs.pretrained_model_name} --strip-components 1')
 
 
 def verify_installation(installed_protobuf=False):
