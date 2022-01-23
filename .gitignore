@@ -2,6 +2,8 @@
 /resources/images/train/
 /resources/models/*
 !/resources/models/*/pipeline.config
+/egele/*
+/models/*
 /resources/annotations/train.record
 /resources/annotations/test.record
 /resources/annotations/label_map.pbtxt
