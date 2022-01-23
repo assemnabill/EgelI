@@ -4,22 +4,63 @@ E-gel-I is an object detection script aimed to identify a defined set of celebri
 The script is developed by Assem Hussein, Jonas Bartkowski as final project for the
 module fundamentals of artificial intelligence at THM university of applied science in Giessen, Germany.
 
+
+
+## Quick Start
+
+<b>Step 1.</b> Clone this repository and download egele.zip
+<br/><br/>
+<b>Step 2.</b> Create a new virtual environment
+
+extract egele.zip then run
+```shell
+python -m venv egele
+```
+
+<br/>
+<b>Step 3.</b> Activate your virtual environment
+
+```shell
+source egele/bin/activate # Linux
+.\egele\Scripts\activate # Windows 
+```
+
+<br/>
+
 ## Usage
 
 ```
 Usage: egeli.py [options]
 
-	 -n, --model-name=, m, --pre-trained= 	 set a custom model name for training and testing
+	 -n, --model-name=   	 set a custom model name
 
-	 -p, --save-plots=	 save plots of recognized labels
+	 -m, --pre-trained=  	 the pretrained model to use in training.
+				 This is set to ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8 by default.
 
-	 -s, --steps=      	 set the count of steps for training
+	 -s, --steps=        	 set the count of steps for training
 
-	 -t, --train=      	 set boolean value to enable training
+	 -t, --train=        	 set boolean value to enable training
+				 This is set to False by default.
 
-	 -e, --evaluate=   	 set boolean value to enable evaluation using tensor board
+	 -e, --evaluate=     	 set boolean value to enable evaluation using tensor board
+				 This is set to False by default.
 
-	 -d, --detect=     	 set boolean value to enable detection. Images of faces to be detected should be placed in images/test folder
+	 -p, --save-plots=   	 set boolean value to save plots after detection
+				 This is set to False by default.
+
+	 -d, --detect=       	 set boolean value to enable detection.
+				 Images must be at resources/images/test folder.
+
+	 -i, --installation= 	 set boolean value to install object detection api.
+				 This is set to False by default.
+
+	 -r, --generation=   	 set boolean value to disable tf record generation. 
+	 -c, --checkpoint=   	 set checkpoint to detect from. 
+	 -o, --threshold=    	 set detection threshold (minimum score from which a label is drawn).
+				 This is set to 0.8 by default.
+
+	 -a, --random=       	 enable random sequencing when detecting from test folder.
+				 This is set to False by default.
 ```
 
 ## Add new Pretrained Model
