@@ -4,8 +4,6 @@ import tensorflow as tf
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 import configs
-import object_detection.builders as model_builder
-from object_detection.utils import config_util
 from egeli import run_cmd
 
 
