@@ -8,7 +8,7 @@ module fundamentals of artificial intelligence at THM university of applied scie
 
 ## Quick Start
 
-<b>Step 1.</b> Clone this repository and download egele.zip
+<b>Step 1.</b> Clone this repository and download [egele.zip](https://drive.google.com/file/d/1HB3BQ8FX2TaK-sE6V8RShdniWzM1_OCG/view?usp=sharing)
 <br/><br/>
 <b>Step 2.</b> Create a new virtual environment
 
