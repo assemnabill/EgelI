@@ -10,4 +10,6 @@
 /models/
 /.idea/
 /resources/pre-trained-models/
-/src/__pycache__/
+/__pycache__/
+/resources/images/FACES/
+*.tmp
