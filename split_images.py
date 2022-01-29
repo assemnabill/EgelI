@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 from optparse import OptionParser
-
+import cv2
 
 folder_name_placeholder = "[FOLDER_NAME]"
 file_name_placeholder = "[FILE_NAME]"
@@ -16,7 +16,8 @@ ymin_placeholder = "[YMIN]"
 xmax_placeholder = "[XMAX]"
 ymax_placeholder = "[YMAX]"
 
-base_folder = os.path.join("", "resources", "images", "collected images")
+collected_images_folder = os.path.join("", "resources", "images", "collected images")
+faces_folder = os.path.join("", "resources", "images", "FACES")
 test_folder = os.path.join("", "resources", "images", "test")
 train_folder = os.path.join("", "resources", "images", "train")
 default_xml_path = os.path.join("", "resources", "EXAMPLE.xml")
@@ -30,7 +31,8 @@ def read_xml_content():
 
 default_xml_content = read_xml_content()
 
-def make_xml(folder_name, file_name, xml_path, image_path, width, height, label, xmin, ymin, xmax, ymax):
+
+def make_xml(folder_name, file_name, label, xml_path, image_path, width, height, xmin, ymin, xmax, ymax):
     xml_content = default_xml_content
     xml_content = xml_content.replace(folder_name_placeholder, folder_name)
     xml_content = xml_content.replace(path_placeholder, os.path.realpath(image_path))
@@ -55,71 +57,181 @@ def make_copy_in_relevant_folder(testing_reached, label, org_file, i):
         file_name = os.path.join(test_folder, label + "-" + str(i) + ".jpg")
 
 
-def detect_face(img_path, show_image=False):
-    import cv2
+def load_image(img_path):
+    abspath = os.path.abspath(img_path)
+    return cv2.imread(abspath)
 
+
+def locate_faces(img):
     # Load the cascade
-    face_cascade = cv2.CascadeClassifier(os.path.join("", "resources", "haarcascade_frontalface_default.xml'"))
-    # Read the input image
-    img = cv2.imread(img_path)
-    (ytot, xtot, depth) = img.shape
+    face_cascade = cv2.CascadeClassifier(os.path.join("", "resources", "haarcascade_frontalface_default.xml"))
     # Convert into grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Detect faces
     faces = face_cascade.detectMultiScale(gray, 1.3, 10)
-    # Draw rectangle around the faces
-    detected_face = len(faces) >= 1
-    if detected_face:
-        (x, y, w, h) = faces[0]
-        #for (x, y, w, h) in faces:
-        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-    # Display the output
-    if show_image:
-        cv2.imshow('img', img)
+    return faces
+
+
+def paint_face_on_image(face, img):
+    (x, y, w, h) = face
+    cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+
+def get_bounding_box(face, img):
+    (ytot, xtot, depth) = img.shape
+    (x, y, w, h) = face
+    return x, y, x + w, y + h, xtot, ytot
+
+
+def show_image(img, wait=True):
+    cv2.imshow('img', img)
+    if wait:
         cv2.waitKey()
 
-    if (detected_face):
-        return x, y, x+w, y+h, xtot, ytot
-    else: return False
+
+def detect_faces(img, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1):
+    bounding_boxes = []
+    # Draw rectangle around the faces
+    faces = locate_faces(img)
+    located_face = len(faces) >= 1
+    i = 0
+    while i < len(faces) and (i < images_to_locate or images_to_locate == -1):
+        face = faces[i]
+        if do_show_image and (min_faces_to_show == -1 or len(faces) >= min_faces_to_show):
+            paint_face_on_image(face, img)
+        bounding_boxes.append(get_bounding_box(face, img))
+        i = i + 1
+    if do_show_image and (min_faces_to_show == -1 or len(faces) >= min_faces_to_show):
+        show_image(img)
+    return bounding_boxes
 
 
-def split_images(training_percentage=0.8, max_number_images=-1, exclude_folders=[], generate_xml = True):
-    #1. folder selections
-    #1.1 select testing percentage
-    #1.2 select image amount to be maximally split
-    #2. iterate over folders
-        #2.1 for each folder:
-            #2.2 number_images = max(max_number_images, number_images_in_folder)
-            #2.3 while i < number_images
-                #2.4 if (i < number_images * testing_percentage) copy [with name [folder]-i.jpg] to ../test/
-                #2.5 else (i < number_images * testing_percentage) copy [with name [folder]-i.jpg] to ../test/
+def make_label(subdir):
+    return subdir[subdir.rindex("\\") + 1:]
 
+
+def is_image(file_name):
+    return file_name.lower().endswith('jpg') | file_name.lower().endswith('jpeg') | file_name.lower().endswith('png')
+
+
+def iterate_images_folder(root_dir, file_lambda=lambda subdir, file:(), exclude_folders=[]):
+    for subdir, dirs, files in os.walk(root_dir):
+        if subdir != root_dir:
+            label = make_label(subdir)
+            if label not in exclude_folders:
+                print("Processing", subdir, "...")
+                for file in files:
+                    if is_image(file):
+                        print("Processing", os.path.join(subdir, file), "...")
+                        file_lambda(subdir, file)
+            else:
+                print("Skipping", subdir, "...")
+
+
+def iterate_collected_images(file_lambda=lambda subdir, file:(), exclude_folders=[]):
+    iterate_images_folder(collected_images_folder, file_lambda, exclude_folders=exclude_folders)
+
+
+def make_org_file_path(subdir, file):
+    return os.path.join(subdir, file)
+
+
+def show_collected_faces(exclude_folders=[]):
+    iterate_collected_images(lambda subdir, file: detect_faces(load_image(make_org_file_path(subdir, file)), do_show_image=True, min_faces_to_show=3), exclude_folders=exclude_folders)
+
+
+def write_subimages_faces(img, org_file_name, label, do_show_image=False):
+    label_faces_folder = os.path.abspath(faces_folder, label)
+    os.makedirs(label_faces_folder, exist_ok=True)
+
+    #crop images and save
+    face_boxes = detect_faces(img)
+    i = 0
+    for (xmin, ymin, xmax, ymax, xtot, ytot) in face_boxes:
+        cropped_image = img[ymin:ymax, xmin:xmax]
+        if do_show_image:
+            show_image(cropped_image)
+        file_base = org_file_name[:str(org_file_name).rindex(".")]
+        final_file_path = os.path.join(label_faces_folder, file_base + ("-"+str(i) if i > 0 else "") + ".jpg")
+        cv2.imwrite(final_file_path, cropped_image)
+        i=i+1
+
+
+def create_face_files(exclude_folders=[], do_show_images=False):
+    iterate_collected_images(lambda subdir, file: write_subimages_faces(load_image(make_org_file_path(subdir, file)), file, make_label(subdir), do_show_image=do_show_images),
+                             exclude_folders=exclude_folders)
+
+
+def split_and_annotate(training_percentage=0.8, max_number_images=-1, exclude_folders=[], generate_xml=True,
+                       do_show_image=False):
     os.makedirs(test_folder, exist_ok=True)
     os.makedirs(train_folder, exist_ok=True)
 
-    for subdir, dirs, files in os.walk(base_folder):
+    for subdir, dirs, files in os.walk(collected_images_folder):
         print("Processing", subdir, "...")
-        if subdir != base_folder:
+        if subdir != collected_images_folder:
             label = subdir[subdir.rindex("\\") + 1:]
-            if not label in exclude_folders:
+            if label not in exclude_folders:
                 num_images = min(max_number_images, len(files)) if max_number_images > 0 else len(files)
                 testing_start_index = math.floor(num_images * training_percentage)
                 i = 0
                 while i < num_images:
                     org_file_name = files[i]
-                    print("Processing image",str(i)+"/"+str(num_images), "("+os.path.join(subdir, org_file_name)+")")
+                    print("Processing image", str(i) + "/" + str(num_images),
+                          "(" + os.path.join(subdir, org_file_name) + ")")
                     testing_reached = i < testing_start_index
                     org_file_path = os.path.join(subdir, org_file_name)
                     tar_image_file_name_base = label + "-" + str(i)
-                    file_base = os.path.join(train_folder, label + "-" + str(i)) if testing_reached else os.path.join(test_folder, tar_image_file_name_base)
+                    file_base = os.path.join(train_folder, label + "-" + str(i)) if testing_reached else os.path.join(
+                        test_folder, tar_image_file_name_base)
                     shutil.copy(org_file_path, file_base + ".jpg")
                     if generate_xml:
-                        detected_face = detect_face(org_file_path)
-                        if (detected_face):
+                        img = load_image(org_file_path)
+                        detected_face = detect_faces(img, images_to_locate=1, do_show_image=do_show_image)[0]
+                        if detected_face:
                             (xmin, ymin, xmax, ymax, xtot, ytot) = detected_face
-                            make_xml(label, tar_image_file_name_base+".jpg", file_base+".xml", file_base + ".jpg", xtot, ytot, label, xmin, ymin, xmax, ymax)
+                            make_xml(label, tar_image_file_name_base + ".jpg", label,
+                                     file_base + ".xml",
+                                     file_base + ".jpg",
+                                     xtot, ytot, xmin, ymin, xmax, ymax)
 
-                    i=i+1
+                    i = i + 1
+
+def annotate_extracted_faces(root_dir=faces_folder, training_percentage=0.8, max_number_images=-1, exclude_folders=[], generate_xml=True,
+                       do_show_image=False):
+    os.makedirs(test_folder, exist_ok=True)
+    os.makedirs(train_folder, exist_ok=True)
+
+    for subdir, dirs, files in os.walk(root_dir):
+        print("Processing", subdir, "...")
+        if subdir != root_dir:
+            label = subdir[subdir.rindex("\\") + 1:]
+            if label not in exclude_folders:
+                num_images = min(max_number_images, len(files)) if max_number_images > 0 else len(files)
+                testing_start_index = math.floor(num_images * training_percentage)
+                i = 0
+                while i < num_images:
+                    org_file_name = files[i]
+                    print("Processing image", str(i) + "/" + str(num_images),
+                          "(" + os.path.join(subdir, org_file_name) + ")")
+                    testing_reached = i < testing_start_index
+                    org_file_path = os.path.join(subdir, org_file_name)
+                    tar_image_file_name_base = label + "-" + str(i)
+                    file_base = os.path.join(train_folder, label + "-" + str(i)) if testing_reached else os.path.join(
+                        test_folder, tar_image_file_name_base)
+                    shutil.copy(org_file_path, file_base + ".jpg")
+                    if generate_xml:
+                        img = load_image(org_file_path)
+                        if do_show_image:
+                            show_image(img)
+                        (ytot, xtot, depth) = img.shape
+                        #(x, y, w, h) = face
+                        make_xml(label, tar_image_file_name_base + ".jpg", label,
+                                 file_base + ".xml",
+                                 file_base + ".jpg",
+                                 xtot, ytot, 0, 0, xtot, ytot)
+
+                    i = i + 1
 
 
 def usage():
@@ -139,6 +251,8 @@ def main():
     parser.add_option("-p", "--training_percentage", action="store", default=0.8, type="float")
     parser.add_option("-m", "--max_images", action="store", default=-1, type="int")
     parser.add_option("-x", "--exclude_folders", action="store", default=[], type="string")
+    parser.add_option("-s", "--show_images", action="store_true", default=False)
+    parser.add_option("-f", "--face_files", action="store_true", default=False)
 
     options, args = parser.parse_args()
 
@@ -146,10 +260,20 @@ def main():
     if excluded_folders:
         excluded_folders = re.split(",\\s*", excluded_folders)
 
-    split_images(generate_xml=options.auto_annotate,
-                 max_number_images=options.max_images,
-                 exclude_folders=excluded_folders,
-                 training_percentage=options.training_percentage)
+    if options.face_files:
+        if options.auto_annotate:
+            annotate_extracted_faces()
+        else:
+            create_face_files(exclude_folders=excluded_folders, do_show_images=options.show_images)
+    else:
+        if not options.show_images:
+            split_and_annotate(generate_xml=options.auto_annotate,
+                               max_number_images=options.max_images,
+                               exclude_folders=excluded_folders,
+                               training_percentage=options.training_percentage)
+        else:
+            show_collected_faces(exclude_folders=excluded_folders)
+
 
 
 if __name__ == '__main__':
