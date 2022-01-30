@@ -1,6 +1,8 @@
 import os.path
 import configs
 import os
+import time
+from timeit import default_timer as timer
 
 
 def run_cmd(cmd):
@@ -29,7 +31,10 @@ def train_model(training_script, steps=None):
                 configs.training_steps if steps is None else steps)
     if configs.training_enabled:
         print('Training the model...')
+        start = timer()
         run_cmd(command)
+        end = timer()
+        print("Training took", (end - start), "seconds!")
     else:
         print('Not training the model...')
 
