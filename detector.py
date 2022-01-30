@@ -55,7 +55,8 @@ def detect_from_img(image_path):
 
 
 def test():
-    images = os.listdir(os.path.join(configs.paths["IMAGE_PATH"], "test"))
+    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    images = os.listdir(test_images_path)
     for img in images:
         is_img = img.lower().endswith('jpg') | img.lower().endswith('jpeg') | img.lower().endswith('png')
         if (not is_img) | (img.lower().endswith('.xml')):
