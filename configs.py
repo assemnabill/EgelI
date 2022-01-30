@@ -17,7 +17,7 @@ evaluation_enabled = False
 detection_enabled = False
 save_plots = False
 install_api = False
-generate_records = False
+generate_records = True
 random_detection = False
 
 training_steps = 2000
