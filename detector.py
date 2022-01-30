@@ -65,9 +65,8 @@ def test():
         random.shuffle(images)
 
     for img in images:
-        if not img.lower().endswith(".xml"):
-            image_path = os.path.join(configs.paths['IMAGE_PATH'], 'test', img)
-            detect_from_img(image_path)
+        image_path = os.path.join(test_images_path, img)
+        detect_from_img(image_path)
 
 
 def detection_model_from_checkpoint(checkpoint):
