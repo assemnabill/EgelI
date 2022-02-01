@@ -190,15 +190,22 @@ def create_face_files(exclude_folders=[], do_show_images=False):
                              exclude_folders=exclude_folders)
 
 
-def split_and_annotate(training_percentage=0.8, max_number_images=-1, exclude_folders=[], generate_xml=True,
-                       do_show_image=False):
+def split_and_annotate(training_percentage=0.8, max_number_images=-1, max_number_faces=-1, exclude_folders=[], generate_xml=True,
+                       manual_confirmation=False):
     os.makedirs(test_folder, exist_ok=True)
     os.makedirs(train_folder, exist_ok=True)
 
+    total_images = 0
+    faces_detected_overall = 0
+    images_with_faces_overall = 0
     for subdir, dirs, files in os.walk(collected_images_folder):
+        files = remove_non_images_files(files)
+        total_images = total_images + len(files)
+        faces_detected_folder = 0
+        images_with_faces_folder = 0
+        label = subdir[subdir.rindex("\\") + 1:]
         print("Processing", subdir, "...")
         if subdir != collected_images_folder:
-            label = subdir[subdir.rindex("\\") + 1:]
             if label not in exclude_folders:
                 num_images = min(max_number_images, len(files)) if max_number_images > 0 else len(files)
                 testing_start_index = math.floor(num_images * training_percentage)
@@ -209,21 +216,49 @@ def split_and_annotate(training_percentage=0.8, max_number_images=-1, exclude_fo
                           "(" + os.path.join(subdir, org_file_name) + ")")
                     testing_reached = i < testing_start_index
                     org_file_path = os.path.join(subdir, org_file_name)
-                    tar_image_file_name_base = label + "-" + str(i)
-                    file_base = os.path.join(train_folder, label + "-" + str(i)) if testing_reached else os.path.join(
-                        test_folder, tar_image_file_name_base)
-                    shutil.copy(org_file_path, file_base + ".jpg")
+                    target_file_name_without_extension = label + "-" + str(i)
+                    path_without_extension = os.path.join(train_folder, label + "-" + str(i)) if testing_reached else os.path.join(
+                        test_folder, target_file_name_without_extension)
+                    img = load_image(org_file_path)
+                    cv2.imwrite(path_without_extension + ".jpg", img)
+                    #shutil.copy(org_file_path, path_without_extension + ".jpg")
                     if generate_xml:
-                        img = load_image(org_file_path)
-                        detected_face = detect_faces(img, images_to_locate=1, do_show_image=do_show_image)[0]
-                        if detected_face:
-                            (xmin, ymin, xmax, ymax, xtot, ytot) = detected_face
-                            make_xml(label, tar_image_file_name_base + ".jpg", label,
-                                     file_base + ".xml",
-                                     file_base + ".jpg",
-                                     xtot, ytot, xmin, ymin, xmax, ymax)
+                        detected_faces = detect_faces_opencv(img)
+                        faces_detected_folder = faces_detected_folder + len(detected_faces)
+                        faces_detected_overall = faces_detected_overall + len(detected_faces)
+                        images_with_faces_folder = images_with_faces_folder + (1 if len(detected_faces) > 0 else 0)
+                        images_with_faces_overall = images_with_faces_overall + (1 if len(detected_faces) > 0 else 0)
+                        fi = 0
+                        for (xmin, ymin, xmax, ymax, xtot, ytot) in detected_faces:
+                            if fi >= max_number_faces and max_number_faces != -1:
+                                break
+                            cropped_image = img[ymin:ymax, xmin:xmax]
+                            if manual_confirmation:
+                                title = "Is this " + label + "? (Y|n)"
+                                print(title)
+                                key=show_image(cropped_image, wait=True, win_name=title, wait_time=0)
+                                cv2.destroyAllWindows()
+                                if key.lower() != "n":
+                                    print("Writing xml with bounding box \n("+str(xmin)+"|"+str(ymin)+") to ("+str(xmax)+"|"+str(ymax)+") \n["+str(xmax-xmin)+"x"+str(ymax-ymin )+"]...\n")
+                                    make_xml(label, target_file_name_without_extension + ".jpg", label,
+                                             path_without_extension + "-" + ("" if max_number_faces == -1 else str(fi)) + ".xml",
+                                             path_without_extension + ".jpg",
+                                             xtot, ytot, xmin, ymin, xmax, ymax)
+                            else:
+                                make_xml(label, target_file_name_without_extension + ".jpg", label,
+                                         path_without_extension + ("" if max_number_faces == -1 else str(fi)) + ".xml",
+                                         path_without_extension + ".jpg",
+                                         xtot, ytot, xmin, ymin, xmax, ymax)
 
+                            fi = fi + 1
+                        fi = 0
                     i = i + 1
+
+        print("Folder", label, "contained", len(files), "image files with", images_with_faces_folder, "of them containing an overall total of", faces_detected_folder, "faces!")
+        images_with_faces_folder = 0
+        faces_detected_folder = 0
+    print("Overall there where", len(files), "image files with", images_with_faces_overall,
+          "of them containing an overall total of", faces_detected_overall)
 
 def annotate_extracted_faces(root_dir=faces_folder, training_percentage=0.8, max_number_images=-1, exclude_folders=[], generate_xml=True,
                        do_show_image=False):
