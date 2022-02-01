@@ -1,7 +1,6 @@
 import os.path
 import configs
 import os
-import time
 from timeit import default_timer as timer
 
 
@@ -10,7 +9,9 @@ def run_cmd(cmd):
     return os.system(cmd)
 
 
-def evaluate_model(training_script):
+def evaluate_model(training_script=None):
+    if training_script is None:
+        training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
     command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
         .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
                 configs.paths['CHECKPOINT_PATH'])
@@ -23,8 +24,10 @@ def evaluate_model(training_script):
         print(command)
 
 
-def train_model(training_script, steps=None):
-    command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={}" \
+def train_model(training_script=None, steps=None):
+    if training_script is None:
+        training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
+    command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={} " \
         .format(training_script,
                 configs.paths['CHECKPOINT_PATH'],
                 configs.files['PIPELINE_CONFIG'],
@@ -40,6 +43,5 @@ def train_model(training_script, steps=None):
 
 
 def run():
-    training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
-    train_model(training_script)
-    evaluate_model(training_script)
+    train_model()
+    evaluate_model()
