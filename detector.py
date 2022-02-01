@@ -43,6 +43,8 @@ def collect_label_from_filepath(image_path):
 
 
 def calculate_average_score_for_test_labels(test_images_path=None, verbose=True, model=None):
+    init(verbose=verbose)
+    print("Creating average test scores for labels...")
     if test_images_path is None:
         test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
     if model is None:
@@ -175,7 +177,8 @@ def detect_and_display_from_img(image_path, verbose=True, model=None, max_boxes=
         plt.savefig(f'{image_path}')
 
 
-def detect_and_display_test_images(test_images_path=None, max_boxes=5):
+def detect_and_display_test_images(test_images_path=None, max_boxes=5, verbose=False):
+    init(verbose=verbose)
     print("Detection threshold set to", configs.detection_threshold)
     print("Random detection sequence set to", configs.random_detection)
     if test_images_path is None:
@@ -222,7 +225,10 @@ def load_detection_model_from_checkpoint(checkpoint):
     check_point.restore(os.path.join(configs.paths['CHECKPOINT_PATH'], checkpoint)).expect_partial()
     return detection_model
 
-def init():
+
+def init(verbose=False):
+    if verbose:
+        print("Loading checkpoint " + configs.checkpoint + "...")
     if configs.checkpoint:
         checkpoint = configs.checkpoint
     else:
@@ -231,5 +237,3 @@ def init():
         checkpoint = index.pop().replace(".index", "")
 
     configs.detection_model = load_detection_model_from_checkpoint(checkpoint)
-
-    calculate_average_score_for_test_labels()

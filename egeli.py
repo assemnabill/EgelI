@@ -42,7 +42,7 @@ def usage():
           '\t\t\t\t\t\t\t This is set to 0.8 by default.\n')
     print('\t -a, --random=       \t enable random sequencing when detecting from test folder.\n'
           '\t\t\t\t\t\t\t This is set to False by default.\n')
-    print('\t -p, --average-test-scores=       \t Generate report on average detection scores of labels in test files.\n'
+    print('\t -x, --average-test-scores=       \t Generate report on average detection scores of labels in test files.\n'
           '\t\t\t\t\t\t\t This is set to False by default.\n')
     print(
         '\t -v, --verbose=       \t Enable more detailed output.\n'
@@ -56,7 +56,7 @@ def run_cmd(cmd):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:c:o:a:p:",
+        opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:c:o:a:x:",
                                    ["--model-name=", "--pre-trained=", "--steps=", "--train=", "--evaluate=",
                                     "--detect=", "--save-plots=", "--installation=", "--generation=",
                                     "--checkpoint=", "--threshold=", "--random=", "--average-test-scores=",
@@ -98,7 +98,7 @@ def main(argv):
             configs.detection_threshold = float(arg)
         elif opt in ("-a", "--random"):
             configs.random_detection = parse_boolean(arg)
-        elif opt in ("-p", "--average-test-scores"):
+        elif opt in ("-x", "--average-test-scores"):
             configs.report_average_test_scores = parse_boolean(arg)
         elif opt in ("-v", "--verbose"):
             configs.verbose = parse_boolean(arg)
@@ -135,7 +135,7 @@ def main(argv):
     if configs.evaluation_enabled:
         trainer.evaluate_model()
     if configs.detection_enabled:
-        detector.detect_and_display_test_images(max_boxes=5)
+        detector.detect_and_display_test_images(max_boxes=5, verbose=verbose)
     if configs.report_average_test_scores:
         detector.calculate_average_score_for_test_labels(verbose=configs.verbose)
 
