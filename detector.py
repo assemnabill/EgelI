@@ -176,6 +176,8 @@ def detect_and_display_from_img(image_path, verbose=True, model=None, max_boxes=
 
 
 def detect_and_display_test_images(test_images_path=None, max_boxes=5):
+    print("Detection threshold set to", configs.detection_threshold)
+    print("Random detection sequence set to", configs.random_detection)
     if test_images_path is None:
         test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
     images = remove_non_images_files(os.listdir(test_images_path))
@@ -220,8 +222,7 @@ def load_detection_model_from_checkpoint(checkpoint):
     check_point.restore(os.path.join(configs.paths['CHECKPOINT_PATH'], checkpoint)).expect_partial()
     return detection_model
 
-
-def run():
+def init():
     if configs.checkpoint:
         checkpoint = configs.checkpoint
     else:
@@ -230,7 +231,5 @@ def run():
         checkpoint = index.pop().replace(".index", "")
 
     configs.detection_model = load_detection_model_from_checkpoint(checkpoint)
-    print("Detection threshold set to", configs.detection_threshold)
-    print("Random detection sequence set to", configs.random_detection)
-    detect_and_display_test_images(max_boxes=5)
-    #calculate_average_score_for_test_labels()
+
+    calculate_average_score_for_test_labels()

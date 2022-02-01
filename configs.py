@@ -22,6 +22,8 @@ save_plots = False
 install_api = False
 generate_records = True
 random_detection = False
+report_average_test_scores = False
+verbose = False
 
 training_steps = 2000
 detection_threshold = 0.8
