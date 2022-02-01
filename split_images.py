@@ -293,14 +293,16 @@ def main():
             annotate_extracted_faces()
         else:
             create_face_files(exclude_folders=excluded_folders, do_show_images=options.show_images)
-    else:
-        if not options.show_images:
-            split_and_annotate(generate_xml=options.auto_annotate,
-                               max_number_images=options.max_images,
-                               exclude_folders=excluded_folders,
-                               training_percentage=options.training_percentage)
-        else:
+        if options.show_images:
             show_collected_faces(exclude_folders=excluded_folders)
+    else:
+        split_and_annotate(generate_xml=options.auto_annotate,
+                           max_number_images=options.max_images,
+                           exclude_folders=excluded_folders,
+                           training_percentage=options.training_percentage,
+                           manual_confirmation=options.show_images,
+                           max_number_faces=-1)
+
 
 
 
