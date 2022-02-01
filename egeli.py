@@ -68,7 +68,10 @@ def main(argv):
         elif opt in ("-m", "--pre-trained"):
             configs.pretrained_model_name = arg
             configs.custom_model_name = f'my_custom_model-{configs.pretrained_model_name}'
-            configs.pretrained_model_url = models_repo[configs.pretrained_model_name]
+            if configs.pretrained_model_name in models_repo:
+                configs.pretrained_model_url = models_repo[configs.pretrained_model_name]
+            else:
+                print("ERROR. Couldn't find", configs.pretrained_model_name, "in models repo. Valid keys for -m are:", models_repo.keys())
         elif opt in ("-s", "--steps"):
             configs.training_steps = arg
         elif opt in ("-t", "--train"):
