@@ -36,6 +36,14 @@ files = {
     'PIPELINE_CONFIG': os.path.join('resources', 'models', custom_model_name, 'pipeline.config')
 }
 
+def remove_non_images_files(images):
+    for img in images:
+        is_img = img.lower().endswith('jpg') | img.lower().endswith('jpeg') | img.lower().endswith('png')
+        if (not is_img) | (img.lower().endswith('.xml')):
+            images.remove(img)
+
+    return images
+
 
 
 
