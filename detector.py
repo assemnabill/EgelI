@@ -229,7 +229,8 @@ def run():
         index.reverse()
         checkpoint = index.pop().replace(".index", "")
 
-    configs.detection_model = detection_model_from_checkpoint(checkpoint)
+    configs.detection_model = load_detection_model_from_checkpoint(checkpoint)
     print("Detection threshold set to", configs.detection_threshold)
     print("Random detection sequence set to", configs.random_detection)
-    test()
+    detect_and_display_test_images(max_boxes=5)
+    #calculate_average_score_for_test_labels()
