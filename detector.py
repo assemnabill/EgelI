@@ -1,28 +1,133 @@
 import random
+import statistics
+
 import cv2
 import numpy as np
+import six
+
 import configs
 import os
 import tensorflow as tf
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
+from split_images import detect_faces_retinanet, load_image
+from configs import remove_non_images_files
 
 
 @tf.function(experimental_relax_shapes=True)
-def detect_fn(image):
-    image, shapes = configs.detection_model.preprocess(image)
-    prediction_dict = configs.detection_model.predict(image, shapes)
-    detections = configs.detection_model.postprocess(prediction_dict, shapes)
+def detect_fn(image, model):
+    image, shapes = model.preprocess(image)
+    prediction_dict = model.predict(image, shapes)
+    detections = model.postprocess(prediction_dict, shapes)
     return detections
 
 
-def detect_from_img(image_path):
+def calculate_average_score_for_test_labels_over_all_checkpoints(test_images_path=None, verbose=False):
+    if test_images_path is None:
+        test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    checkpoint_path = configs.paths["CHECKPOINT_PATH"]
+    checkpoint_dict = {}
+    for file in os.listdir(checkpoint_path):
+        if file.endswith(".index"):
+            checkpoint = file
+            detection_model = load_detection_model_from_checkpoint(checkpoint)
+            print("Evaluating occurences for checkpoint", checkpoint)
+            (median, average_scores_dict) = calculate_average_score_for_test_labels(test_images_path, verbose=verbose, model=detection_model)
+            checkpoint_dict[checkpoint] = (median, average_scores_dict)
+
+    print(checkpoint_dict)
+
+
+def collect_label_from_filepath(image_path):
+    return image_path[image_path.rindex(os.path.sep)+1:image_path.rindex("-")]
+
+
+def calculate_average_score_for_test_labels(test_images_path=None, verbose=True, model=None):
+    if test_images_path is None:
+        test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    if model is None:
+        model = configs.detection_model
+    images = remove_non_images_files(os.listdir(test_images_path))
+
+    average_scores_dict = {}
+    for img in images:
+        image_path = os.path.join(test_images_path, img)
+        class_label = collect_label_from_filepath(image_path)
+        cls, score = detect_best_score_for_label(image_path, class_label, verbose=verbose, model=model)
+        if verbose:
+            print("Best score for class", cls, "was", score)
+        if cls in average_scores_dict:
+            label_count, score_sum = average_scores_dict[cls]
+            average_scores_dict[cls] = (label_count+1, score_sum + score)
+        else:
+            average_scores_dict[cls] = (1, score)
+
+    correct_dict = {}
+    for (key, val) in average_scores_dict.items():
+        label_count, score_sum = val
+        correct_dict[key] = score_sum/label_count if score_sum > 0 else 0.0
+
+    print("Finished evaluating label scores!")
+    print(correct_dict)
+    median = statistics.median(correct_dict.values())
+    print("Median label score is", median)
+    return median, average_scores_dict
+
+
+def detect_classes_from_img(image_path, scores_to_output=-1, verbose=True, model=None):
+    if model is None:
+        model = configs.detection_model
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose, model=model)
+
+    scores_dict = {}
+    scores_to_output = min(scores_to_output, boxes.shape[0]) if scores_to_output != -1 else boxes.shape[0]
+
+    for i in range(scores_to_output):
+        if classes[i] in six.viewkeys(category_index):
+            class_name = category_index[classes[i]]['name']
+            scores_dict[class_name] = scores[i]
+
+    return scores_dict
+
+
+def detect_best_score_for_label(image_path, label, verbose=True, model=None):
+    if model is None:
+        model = configs.detection_model
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose, model=model)
+
+    for i in range(boxes.shape[0]):
+        if classes[i] in six.viewkeys(category_index):
+            class_name = category_index[classes[i]]['name']
+            if class_name == label:
+                return label, scores[i]
+
+    return label, 0.0
+
+
+def select_best_class_and_score(category_index, classes, scores):
+    class_name = category_index[classes[0]]['name']
+    score = scores[0]
+    return class_name, score
+
+
+def detect_best_class_and_score_from_img(image_path, verbose=True, model=None):
+    if model is None:
+        model = configs.detection_model
+    score_dict = detect_classes_from_img(image_path, scores_to_output=1, verbose=verbose, model=model)
+    key = list(score_dict.keys())[0]
+    return key, score_dict[key]
+
+
+def setup_data_for_detection(image_path, verbose=True, model=None):
+    if model is None:
+        model = configs.detection_model
     category_index = label_map_util.create_category_index_from_labelmap(configs.files['LABELMAP'])
     img = cv2.imread(image_path)
     image_np = np.array(img)
-    print(f'detecting from {image_path}')
+    if verbose:
+        print(f'Detecting from {image_path}')
     input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-    detections = detect_fn(input_tensor)
+    detections = detect_fn(input_tensor, model)
 
     num_detections = int(detections.pop('num_detections'))
     detections = {key: value[0, :num_detections].numpy()
