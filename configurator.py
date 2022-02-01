@@ -82,7 +82,7 @@ def verify_installation():
 
 def download_pretrained_models():
     tar_name = get_model_tar_name()
-    if os.path.exists(tar_name):
+    if os.path.exists(os.path.join(configs.paths['PRETRAINED_MODEL_PATH'], tar_name)):
         print(f'Found pretrained model {tar_name}')
     else:
         print('Downloading pretrained model..')
