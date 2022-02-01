@@ -122,6 +122,8 @@ def main(argv):
 
     if configs.training_enabled:
         trainer.run()
+    if configs.evaluation_enabled:
+        trainer.evaluate_model()
     if configs.detection_enabled:
         detector.run()
 
