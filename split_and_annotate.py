@@ -298,7 +298,7 @@ def annotate_extracted_faces(root_dir=faces_folder, training_percentage=0.8, max
 
 
 def usage():
-    print('Usage: split_images.py [options]\n')
+    print('Usage: split_and_annotate.py [options]\n')
     print('\t -n, --model-name= \t set a custom model name\n'
           'Images of faces to be split and annotated should be placed in \'resources/images/collected images\' folder.\n')
 

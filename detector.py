@@ -10,7 +10,7 @@ import os
 import tensorflow as tf
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
-from split_images import detect_faces_retinanet, load_image
+from split_and_annotate import detect_faces_retinanet, load_image
 from configs import remove_non_images_files
 
 
