@@ -35,14 +35,29 @@ def detect_from_img(image_path):
     label_id_offset = 1
     image_np_with_detections = image_np.copy()
 
+    boxes = detections['detection_boxes']
+    classes = detections['detection_classes'] + label_id_offset
+    scores = detections['detection_scores']
+
+    return (image_np_with_detections, boxes, classes, scores, category_index)
+
+
+def detect_and_display_from_img(image_path, verbose=True, model=None, max_boxes=5):
+    if model is None:
+        model = configs.detection_model
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, model)
+
+    if verbose:
+        print("Best score is", select_best_class_and_score(category_index, classes, scores))
+
     viz_utils.visualize_boxes_and_labels_on_image_array(
         image_np_with_detections,
-        detections['detection_boxes'],
-        detections['detection_classes'] + label_id_offset,
-        detections['detection_scores'],
+        boxes,
+        classes,
+        scores,
         category_index,
         use_normalized_coordinates=True,
-        max_boxes_to_draw=5,
+        max_boxes_to_draw=max_boxes,
         min_score_thresh=configs.detection_threshold,
         agnostic_mode=False)
     import matplotlib
@@ -50,27 +65,46 @@ def detect_from_img(image_path):
     matplotlib.use('TkAgg')
     plt.imshow(cv2.cvtColor(image_np_with_detections, cv2.COLOR_BGR2RGB))
     plt.show(block=True)
+
     if configs.save_plots:
         plt.savefig(f'{image_path}')
 
 
-def test():
-    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
-    images = os.listdir(test_images_path)
-    for img in images:
-        is_img = img.lower().endswith('jpg') | img.lower().endswith('jpeg') | img.lower().endswith('png')
-        if (not is_img) | (img.lower().endswith('.xml')):
-            images.remove(img)
+def detect_and_display_test_images(test_images_path=None, max_boxes=5):
+    if test_images_path is None:
+        test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    images = remove_non_images_files(os.listdir(test_images_path))
+
 
     if configs.random_detection:
         random.shuffle(images)
 
     for img in images:
         image_path = os.path.join(test_images_path, img)
-        detect_from_img(image_path)
+        detect_and_display_from_img(image_path, max_boxes=max_boxes)
 
 
-def detection_model_from_checkpoint(checkpoint):
+# Not in use right now.
+# Will be used later for first splicing faces in image via RetinaNet, detecting splices faces,
+# and then drawing bounding box and label on original image.
+def detect_subfaces(path=None):
+    if path is None:
+        path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    images = remove_non_images_files(os.listdir(path))
+
+    if configs.random_detection:
+        random.shuffle(images)
+
+    for img_file in images:
+        image_path = os.path.join(path, img_file)
+        img = load_image(image_path)
+        faces = detect_faces_retinanet(img_file, image_path)
+        for (xmin, ymin, xmax, ymax, xtot, ytot) in faces:
+            cropped_face = img[ymin:ymax, xmin:xmax]
+            detect_and_display_from_img(cropped_face)
+
+
+def load_detection_model_from_checkpoint(checkpoint):
     from object_detection.builders import model_builder
     from object_detection.utils import config_util
     print('Loading pipeline config...')
