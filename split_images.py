@@ -3,7 +3,9 @@ import os
 import re
 import shutil
 from optparse import OptionParser
+from configs import remove_non_images_files
 import cv2
+from retinaface import RetinaFace
 
 folder_name_placeholder = "[FOLDER_NAME]"
 file_name_placeholder = "[FILE_NAME]"
@@ -62,13 +64,23 @@ def load_image(img_path):
     return cv2.imread(abspath)
 
 
-def locate_faces(img):
+def locate_faces_opencv(img, scale_factor=1.3, min_neighbors=10):
     # Load the cascade
     face_cascade = cv2.CascadeClassifier(os.path.join("", "resources", "haarcascade_frontalface_default.xml"))
     # Convert into grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Detect faces
-    faces = face_cascade.detectMultiScale(gray, 1.3, 10)
+    faces = face_cascade.detectMultiScale(gray, scale_factor, min_neighbors)
+    return faces
+
+def locate_faces_retina(img, img_path):
+    (ytot, xtot, depth) = img.shape
+    resp = RetinaFace.detect_faces(img_path, align=True)
+    faces = []
+    for key, value in resp.items():
+        fa = value["facial_area"]
+        faces.add(fa[0], fa[1], fa[2]-fa[0], fa[3]-fa[1], xtot, ytot)
+
     return faces
 
 
@@ -83,17 +95,33 @@ def get_bounding_box(face, img):
     return x, y, x + w, y + h, xtot, ytot
 
 
-def show_image(img, wait=True):
-    cv2.imshow('img', img)
+def show_image(img, wait=True, win_name='img', wait_time=None):
+    cv2.namedWindow(win_name, )
+    cv2.imshow(win_name, img)
     if wait:
-        cv2.waitKey()
+        return chr(cv2.waitKey(wait_time))
+    return None
 
-
-def detect_faces(img, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1):
+def detect_faces_retinanet(img, img_path, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1, scale_factor=1.3, min_neighbors=10):
     bounding_boxes = []
     # Draw rectangle around the faces
-    faces = locate_faces(img)
-    located_face = len(faces) >= 1
+    faces = locate_faces_retina(img, img_path)
+    i = 0
+    while i < len(faces) and (i < images_to_locate or images_to_locate == -1):
+        face = faces[i]
+        if do_show_image and (min_faces_to_show == -1 or len(faces) >= min_faces_to_show):
+            paint_face_on_image(face, img)
+        bounding_boxes.append(get_bounding_box(face, img))
+        i = i + 1
+    if do_show_image and (min_faces_to_show == -1 or len(faces) >= min_faces_to_show):
+        show_image(img)
+    return bounding_boxes
+
+
+def detect_faces_opencv(img, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1, scale_factor=1.3, min_neighbors=10):
+    bounding_boxes = []
+    # Draw rectangle around the faces
+    faces = locate_faces_opencv(img, scale_factor=scale_factor, min_neighbors=min_neighbors)
     i = 0
     while i < len(faces) and (i < images_to_locate or images_to_locate == -1):
         face = faces[i]
@@ -137,7 +165,7 @@ def make_org_file_path(subdir, file):
 
 
 def show_collected_faces(exclude_folders=[]):
-    iterate_collected_images(lambda subdir, file: detect_faces(load_image(make_org_file_path(subdir, file)), do_show_image=True, min_faces_to_show=3), exclude_folders=exclude_folders)
+    iterate_collected_images(lambda subdir, file: detect_faces_opencv(load_image(make_org_file_path(subdir, file)), do_show_image=True, min_faces_to_show=3), exclude_folders=exclude_folders)
 
 
 def write_subimages_faces(img, org_file_name, label, do_show_image=False):
@@ -145,7 +173,7 @@ def write_subimages_faces(img, org_file_name, label, do_show_image=False):
     os.makedirs(label_faces_folder, exist_ok=True)
 
     #crop images and save
-    face_boxes = detect_faces(img)
+    face_boxes = detect_faces_opencv(img)
     i = 0
     for (xmin, ymin, xmax, ymax, xtot, ytot) in face_boxes:
         cropped_image = img[ymin:ymax, xmin:xmax]
