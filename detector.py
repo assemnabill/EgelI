@@ -69,7 +69,7 @@ def calculate_average_score_for_test_labels(test_images_path=None, verbose=True,
         label_count, score_sum = val
         correct_dict[key] = score_sum/label_count if score_sum > 0 else 0.0
 
-    print("Finished evaluating label scores!")
+    print("Finished evaluating label scores for model", configs.custom_model_name, "and checkpoint", configs.checkpoint+"!")
     print(correct_dict)
     median = statistics.median(correct_dict.values())
     print("Median label score is", median)
