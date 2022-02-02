@@ -61,6 +61,10 @@ Usage: egeli.py [options]
 
 	 -a, --random=       	 enable random sequencing when detecting from test folder.
 				 This is set to False by default.
+
+	 -x, --test-scores==     Generate report on average detection scores of labels in test files.
+				 
+	 -v, --verbose=       	 Enable more detailed output.
 ```
 
 ## Add new Pretrained Model
@@ -73,11 +77,11 @@ Usage: egeli.py [options]
 
 ## Supported Pretrained Models:
 
-	1. ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8
-	2. ssd_resnet152_v1_fpn_640x640_coco17_tpu-8
-	3. ssd_resnet50_v1_fpn_640x640_coco17_tpu-8
-	4. efficientdet_d1_coco17_tpu-32
-	5. efficientdet_d0_coco17_tpu-32
+1. ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8
+2. ssd_resnet152_v1_fpn_640x640_coco17_tpu-8
+3. ssd_resnet50_v1_fpn_640x640_coco17_tpu-8
+4. efficientdet_d1_coco17_tpu-32
+5. efficientdet_d0_coco17_tpu-32
 
 ## Retrain model from scratch
 
