@@ -73,10 +73,8 @@ def calculate_average_score_for_test_labels(verbose=True, model=None):
     return median, average_scores_dict
 
 
-def detect_classes_from_img(image_path, scores_to_output=-1, verbose=True, model=None):
-    if model is None:
-        model = configs.detection_model
-    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose, model=model)
+def detect_classes_from_img(image_path, scores_to_output=-1, verbose=True):
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose, model=configs.detection_model)
 
     scores_dict = {}
     scores_to_output = min(scores_to_output, boxes.shape[0]) if scores_to_output != -1 else boxes.shape[0]
@@ -109,10 +107,8 @@ def select_best_class_and_score(category_index, classes, scores):
     return class_name, score
 
 
-def detect_best_class_and_score_from_img(image_path, verbose=True, model=None):
-    if model is None:
-        model = configs.detection_model
-    score_dict = detect_classes_from_img(image_path, scores_to_output=1, verbose=verbose, model=model)
+def detect_best_class_and_score_from_img(image_path, verbose=True):
+    score_dict = detect_classes_from_img(image_path, scores_to_output=1, verbose=verbose)
     key = list(score_dict.keys())[0]
     return key, score_dict[key]
 
