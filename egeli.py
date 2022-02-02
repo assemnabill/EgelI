@@ -5,8 +5,8 @@
 import getopt
 import sys
 import configs
-import configurator
 import detector
+import configurator
 import trainer
 from configs import *
 

@@ -3,9 +3,10 @@ import os
 import re
 import shutil
 from optparse import OptionParser
-from configs import remove_non_images_files
+from configurator import remove_non_images_files, load_image
 import cv2
-from retinaface import RetinaFace
+
+from detector import locate_faces_opencv, paint_face_on_image, show_image, get_bounding_box
 
 folder_name_placeholder = "[FOLDER_NAME]"
 file_name_placeholder = "[FILE_NAME]"
