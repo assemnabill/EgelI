@@ -40,11 +40,10 @@ def collect_label_from_filepath(image_path):
     return image_path[image_path.rindex(os.path.sep)+1:image_path.rindex("-")]
 
 
-def calculate_average_score_for_test_labels(test_images_path=None, verbose=True, model=None):
+def calculate_average_score_for_test_labels(verbose=True, model=None):
     init(verbose=verbose)
     print("Creating average test scores for labels...")
-    if test_images_path is None:
-        test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
     if model is None:
         model = configs.detection_model
     images = remove_non_images_files(os.listdir(test_images_path))
@@ -175,14 +174,13 @@ def detect_and_display_from_img(image_path, verbose=True, model=None, max_boxes=
         plt.savefig(f'{image_path}')
 
 
-def detect_and_display_test_images(test_images_path=None, max_boxes=5, verbose=False):
+def detect(test_images_path=None, max_boxes=5, verbose=False):
     init(verbose=verbose)
     print("Detection threshold set to", configs.detection_threshold)
     print("Random detection sequence set to", configs.random_detection)
     if test_images_path is None:
         test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
     images = remove_non_images_files(os.listdir(test_images_path))
-
 
     if configs.random_detection:
         random.shuffle(images)
