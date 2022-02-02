@@ -42,7 +42,7 @@ def usage():
           '\t\t\t\t\t\t\t This is set to 0.8 by default.\n')
     print('\t -a, --random=       \t enable random sequencing when detecting from test folder.\n'
           '\t\t\t\t\t\t\t This is set to False by default.\n')
-    print('\t -x, --average-test-scores=       \t Generate report on average detection scores of labels in test files.\n'
+    print('\t -x, --test-scores=       \t Generate report on average detection scores of labels in test files.\n'
           '\t\t\t\t\t\t\t This is set to False by default.\n')
     print(
         '\t -v, --verbose=       \t Enable more detailed output.\n'
@@ -59,7 +59,7 @@ def main(argv):
         opts, args = getopt.getopt(argv, "h:i:n:m:p:s:t:e:d:v:r:c:o:a:x:",
                                    ["--model-name=", "--pre-trained=", "--steps=", "--train=", "--evaluate=",
                                     "--detect=", "--save-plots=", "--installation=", "--generation=",
-                                    "--checkpoint=", "--threshold=", "--random=", "--average-test-scores=",
+                                    "--checkpoint=", "--threshold=", "--random=", "--test-scores=",
                                     "--verbose="])
     except getopt.GetoptError as err:
         print(err)
@@ -98,7 +98,7 @@ def main(argv):
             configs.detection_threshold = float(arg)
         elif opt in ("-a", "--random"):
             configs.random_detection = parse_boolean(arg)
-        elif opt in ("-x", "--average-test-scores"):
+        elif opt in ("-x", "--test-scores"):
             configs.report_average_test_scores = parse_boolean(arg)
         elif opt in ("-v", "--verbose"):
             configs.verbose = parse_boolean(arg)
