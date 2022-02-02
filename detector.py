@@ -20,12 +20,12 @@ def detect_fn(image, model):
     return detections
 
 
-def calculate_average_score_for_test_labels_over_all_checkpoints(test_images_path=None, verbose=False):
-    if test_images_path is None:
-        test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+def test_score_from_checkpoints(verbose=False):
+    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
     checkpoint_path = configs.paths["CHECKPOINT_PATH"]
     checkpoint_dict = {}
-    for file in os.listdir(checkpoint_path):
+    files = os.listdir(checkpoint_path)
+    for file in files:
         if file.endswith(".index"):
             checkpoint = file
             detection_model = load_detection_model_from_checkpoint(checkpoint)
