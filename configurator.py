@@ -1,5 +1,7 @@
 import os.path
 import sys
+
+import cv2
 import tensorflow as tf
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
@@ -183,3 +185,17 @@ def init():
     config_transfer_learning_pipeline()
     if configs.generate_records:
         generate_tf_records()
+
+
+def remove_non_images_files(files):
+    for file in files:
+        is_img = file.lower().endswith('jpg') | file.lower().endswith('jpeg') | file.lower().endswith('png')
+        if (not is_img) | (file.lower().endswith('.xml')):
+            files.remove(file)
+
+    return files
+
+
+def load_image(img_path):
+    abspath = os.path.abspath(img_path)
+    return cv2.imread(abspath)

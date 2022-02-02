@@ -59,65 +59,6 @@ def make_copy_in_relevant_folder(testing_reached, label, org_file, i):
         file_name = os.path.join(test_folder, label + "-" + str(i) + ".jpg")
 
 
-def load_image(img_path):
-    abspath = os.path.abspath(img_path)
-    return cv2.imread(abspath)
-
-
-def locate_faces_opencv(img, scale_factor=1.3, min_neighbors=10):
-    # Load the cascade
-    face_cascade = cv2.CascadeClassifier(os.path.join("", "resources", "haarcascade_frontalface_default.xml"))
-    # Convert into grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # Detect faces
-    faces = face_cascade.detectMultiScale(gray, scale_factor, min_neighbors)
-    return faces
-
-def locate_faces_retina(img, img_path):
-    (ytot, xtot, depth) = img.shape
-    resp = RetinaFace.detect_faces(img_path, align=True)
-    faces = []
-    for key, value in resp.items():
-        fa = value["facial_area"]
-        faces.add(fa[0], fa[1], fa[2]-fa[0], fa[3]-fa[1], xtot, ytot)
-
-    return faces
-
-
-def paint_face_on_image(face, img):
-    (x, y, w, h) = face
-    cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-
-def get_bounding_box(face, img):
-    (ytot, xtot, depth) = img.shape
-    (x, y, w, h) = face
-    return x, y, x + w, y + h, xtot, ytot
-
-
-def show_image(img, wait=True, win_name='img', wait_time=None):
-    cv2.namedWindow(win_name, )
-    cv2.imshow(win_name, img)
-    if wait:
-        return chr(cv2.waitKey(wait_time))
-    return None
-
-def detect_faces_retinanet(img, img_path, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1, scale_factor=1.3, min_neighbors=10):
-    bounding_boxes = []
-    # Draw rectangle around the faces
-    faces = locate_faces_retina(img, img_path)
-    i = 0
-    while i < len(faces) and (i < images_to_locate or images_to_locate == -1):
-        face = faces[i]
-        if do_show_image and (min_faces_to_show == -1 or len(faces) >= min_faces_to_show):
-            paint_face_on_image(face, img)
-        bounding_boxes.append(get_bounding_box(face, img))
-        i = i + 1
-    if do_show_image and (min_faces_to_show == -1 or len(faces) >= min_faces_to_show):
-        show_image(img)
-    return bounding_boxes
-
-
 def detect_faces_opencv(img, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1, scale_factor=1.3, min_neighbors=10):
     bounding_boxes = []
     # Draw rectangle around the faces
