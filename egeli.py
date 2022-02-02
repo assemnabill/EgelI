@@ -131,11 +131,11 @@ def main(argv):
     configurator.create_labels_map()
 
     if configs.training_enabled:
-        trainer.run()
+        trainer.train_model()
     if configs.evaluation_enabled:
         trainer.evaluate_model()
     if configs.detection_enabled:
-        detector.detect_and_display_test_images(max_boxes=5, verbose=verbose)
+        detector.detect(max_boxes=5, verbose=configs.verbose)
     if configs.report_average_test_scores:
         detector.calculate_average_score_for_test_labels(verbose=configs.verbose)
 

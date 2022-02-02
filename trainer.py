@@ -9,13 +9,16 @@ def run_cmd(cmd):
     return os.system(cmd)
 
 
-def evaluate_model(training_script=None):
-    if training_script is None:
-        training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
+def load_training_script():
+    return os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
+
+
+def evaluate_model():
+    training_script = load_training_script()
     command = "python {} --model_dir={} --pipeline_config_path={} --checkpoint_dir={}" \
         .format(training_script, configs.paths['CHECKPOINT_PATH'], configs.files['PIPELINE_CONFIG'],
                 configs.paths['CHECKPOINT_PATH'])
-    if configs.evaluation_enabled or configs.training_enabled:
+    if configs.evaluation_enabled:
         print('Evaluating the model..')
         run_cmd(command)
         # run_cmd(f'cd {os.path.join(configs.paths["CHECKPOINT_PATH"], "train")} && tensorboard --logdir=.')
@@ -24,9 +27,8 @@ def evaluate_model(training_script=None):
         print(command)
 
 
-def train_model(training_script=None, steps=None):
-    if training_script is None:
-        training_script = os.path.join(configs.paths['APIMODEL_PATH'], 'research', 'object_detection', 'model_main_tf2.py')
+def train_model(steps=None):
+    training_script = load_training_script()
     command = "python {} --model_dir={} --pipeline_config_path={} --num_train_steps={} " \
         .format(training_script,
                 configs.paths['CHECKPOINT_PATH'],
@@ -40,8 +42,3 @@ def train_model(training_script=None, steps=None):
         print("Training took", (end - start), "seconds!")
     else:
         print('Not training the model...')
-
-
-def run():
-    train_model()
-    evaluate_model()
