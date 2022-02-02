@@ -71,6 +71,14 @@ Usage: egeli.py [options]
 4. Call the Script with `-n <model_name>`
 5. Have fun!
 
+## Supported Pretrained Models:
+
+	1. ssd_mobilenet_v1_fpn_640x640_coco17_tpu-8
+	2. ssd_resnet152_v1_fpn_640x640_coco17_tpu-8
+	3. ssd_resnet50_v1_fpn_640x640_coco17_tpu-8
+	4. efficientdet_d1_coco17_tpu-32
+	5. efficientdet_d0_coco17_tpu-32
+
 ## Retrain model from scratch
 
 1. Delete everything in the relevant model folder under `./resources/models/[MODEL_NAME]` except `pipeline.config`.
