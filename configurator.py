@@ -39,13 +39,22 @@ def upgrade_tf():
     run_cmd(cmd)
 
 
-def config_transfer_learning_pipeline():
+def custom_model_equals_pretrained_model():
+    return f'my_custom_model-{configs.pretrained_model_name}' == configs.custom_model_name
+
+
+def create_model_folder_from_pretrained_model():
     print('Copy Model Config to Training Folder..')
     run_cmd(f'mkdir {configs.paths["CHECKPOINT_PATH"]}')
     cmd = 'cp {} {}'.format(
         os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name, "pipeline.config"),
         os.path.join(configs.paths["CHECKPOINT_PATH"]))
     run_cmd(cmd)
+
+
+def config_transfer_learning_pipeline():
+    if custom_model_equals_pretrained_model():
+        create_model_folder_from_pretrained_model()
     from object_detection.builders import model_builder
     from object_detection.utils import config_util
     print('Update Config For Transfer Learning..')
