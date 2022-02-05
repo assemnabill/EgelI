@@ -1,10 +1,11 @@
 import os.path
 import sys
+
+import cv2
 import tensorflow as tf
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 import configs
-from egeli import run_cmd
 
 
 def set_up_object_detection_api():
@@ -37,13 +38,22 @@ def upgrade_tf():
     run_cmd(cmd)
 
 
-def config_transfer_learning_pipeline():
+def custom_model_equals_pretrained_model():
+    return f'my_custom_model-{configs.pretrained_model_name}' == configs.custom_model_name
+
+
+def create_model_folder_from_pretrained_model():
     print('Copy Model Config to Training Folder..')
     run_cmd(f'mkdir {configs.paths["CHECKPOINT_PATH"]}')
     cmd = 'cp {} {}'.format(
         os.path.join(configs.paths["PRETRAINED_MODEL_PATH"], configs.pretrained_model_name, "pipeline.config"),
         os.path.join(configs.paths["CHECKPOINT_PATH"]))
     run_cmd(cmd)
+
+
+def config_transfer_learning_pipeline():
+    if custom_model_equals_pretrained_model():
+        create_model_folder_from_pretrained_model()
     from object_detection.builders import model_builder
     from object_detection.utils import config_util
     print('Update Config For Transfer Learning..')
@@ -82,7 +92,7 @@ def verify_installation():
 
 def download_pretrained_models():
     tar_name = get_model_tar_name()
-    if os.path.exists(tar_name):
+    if os.path.exists(os.path.join(configs.paths['PRETRAINED_MODEL_PATH'], tar_name)):
         print(f'Found pretrained model {tar_name}')
     else:
         print('Downloading pretrained model..')
@@ -183,3 +193,23 @@ def init():
     config_transfer_learning_pipeline()
     if configs.generate_records:
         generate_tf_records()
+
+
+def remove_non_images_files(files):
+    for file in files:
+        is_img = file.lower().endswith('jpg') | file.lower().endswith('jpeg') | file.lower().endswith('png')
+        if (not is_img) | (file.lower().endswith('.xml')):
+            files.remove(file)
+
+    return files
+
+
+def run_cmd(cmd, do_print=True):
+    if do_print:
+        print(f'Running {cmd}')
+    return os.system(cmd)
+
+
+def load_image(img_path):
+    abspath = os.path.abspath(img_path)
+    return cv2.imread(abspath)
