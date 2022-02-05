@@ -13,46 +13,29 @@ from configurator import remove_non_images_files, load_image
 
 
 @tf.function(experimental_relax_shapes=True)
-def detect_fn(image, model):
-    image, shapes = model.preprocess(image)
-    prediction_dict = model.predict(image, shapes)
-    detections = model.postprocess(prediction_dict, shapes)
+def detect_fn(image):
+    image, shapes = configs.detection_model.preprocess(image)
+    prediction_dict = configs.detection_model.predict(image, shapes)
+    detections = configs.detection_model.postprocess(prediction_dict, shapes)
     return detections
-
-
-def test_score_from_checkpoints(verbose=False):
-    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
-    checkpoint_path = configs.paths["CHECKPOINT_PATH"]
-    checkpoint_dict = {}
-    files = os.listdir(checkpoint_path)
-    for file in files:
-        if file.endswith(".index"):
-            checkpoint = file
-            detection_model = load_detection_model_from_checkpoint(checkpoint)
-            print("Evaluating occurences for checkpoint", checkpoint)
-            (median, average_scores_dict) = calculate_average_score_for_test_labels(test_images_path, verbose=verbose, model=detection_model)
-            checkpoint_dict[checkpoint] = (median, average_scores_dict)
-
-    print(checkpoint_dict)
 
 
 def collect_label_from_filepath(image_path):
     return image_path[image_path.rindex(os.path.sep)+1:image_path.rindex("-")]
 
 
-def calculate_average_score_for_test_labels(verbose=True, model=None):
+def calculate_average_score_for_test_labels(verbose=True):
+
     init(verbose=verbose)
     print("Creating average test scores for labels...")
     test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
-    if model is None:
-        model = configs.detection_model
     images = remove_non_images_files(os.listdir(test_images_path))
 
     average_scores_dict = {}
     for img in images:
         image_path = os.path.join(test_images_path, img)
         class_label = collect_label_from_filepath(image_path)
-        cls, score = detect_best_score_for_label(image_path, class_label, verbose=verbose, model=model)
+        cls, score = detect_best_score_for_label(image_path, class_label, verbose=verbose)
         if verbose:
             print("Best score for class", cls, "was", score)
         if cls in average_scores_dict:
@@ -74,7 +57,7 @@ def calculate_average_score_for_test_labels(verbose=True, model=None):
 
 
 def detect_classes_from_img(image_path, scores_to_output=-1, verbose=True):
-    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose, model=configs.detection_model)
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose)
 
     scores_dict = {}
     scores_to_output = min(scores_to_output, boxes.shape[0]) if scores_to_output != -1 else boxes.shape[0]
@@ -87,10 +70,8 @@ def detect_classes_from_img(image_path, scores_to_output=-1, verbose=True):
     return scores_dict
 
 
-def detect_best_score_for_label(image_path, label, verbose=True, model=None):
-    if model is None:
-        model = configs.detection_model
-    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose, model=model)
+def detect_best_score_for_label(image_path, label, verbose=True):
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, verbose=verbose)
 
     for i in range(boxes.shape[0]):
         if classes[i] in six.viewkeys(category_index):
@@ -113,16 +94,14 @@ def detect_best_class_and_score_from_img(image_path, verbose=True):
     return key, score_dict[key]
 
 
-def setup_data_for_detection(image_path, verbose=True, model=None):
-    if model is None:
-        model = configs.detection_model
+def setup_data_for_detection(image_path, verbose=True):
     category_index = label_map_util.create_category_index_from_labelmap(configs.files['LABELMAP'])
     img = cv2.imread(image_path)
     image_np = np.array(img)
     if verbose:
         print(f'Detecting from {image_path}')
     input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-    detections = detect_fn(input_tensor, model)
+    detections = detect_fn(input_tensor)
 
     num_detections = int(detections.pop('num_detections'))
     detections = {key: value[0, :num_detections].numpy()
@@ -142,10 +121,8 @@ def setup_data_for_detection(image_path, verbose=True, model=None):
     return (image_np_with_detections, boxes, classes, scores, category_index)
 
 
-def detect_and_display_from_img(image_path, verbose=True, model=None, max_boxes=5):
-    if model is None:
-        model = configs.detection_model
-    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path, model)
+def detect_and_display_from_img(image_path, verbose=True, max_boxes=5):
+    (image_np_with_detections, boxes, classes, scores, category_index) = setup_data_for_detection(image_path)
 
     if verbose:
         print("Best score is", select_best_class_and_score(category_index, classes, scores))

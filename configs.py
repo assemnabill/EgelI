@@ -13,6 +13,8 @@ models_repo = {
 }
 
 pipeline_configs = None
+# will be set on runtime.
+detection_model = None
 checkpoint = None
 training_enabled = False
 evaluation_enabled = False

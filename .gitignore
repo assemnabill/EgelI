@@ -13,3 +13,4 @@
 /__pycache__/
 /resources/images/FACES/
 *.tmp
+/reports/
