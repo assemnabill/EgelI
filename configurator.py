@@ -6,7 +6,6 @@ import tensorflow as tf
 from object_detection.protos import pipeline_pb2
 from google.protobuf import text_format
 import configs
-from egeli import run_cmd
 
 
 def set_up_object_detection_api():
@@ -203,6 +202,12 @@ def remove_non_images_files(files):
             files.remove(file)
 
     return files
+
+
+def run_cmd(cmd, do_print=True):
+    if do_print:
+        print(f'Running {cmd}')
+    return os.system(cmd)
 
 
 def load_image(img_path):

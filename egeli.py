@@ -5,8 +5,8 @@
 import getopt
 import sys
 import configs
-import detector
 import configurator
+import detector
 import trainer
 from configs import *
 
@@ -47,11 +47,6 @@ def usage():
     print(
         '\t -v, --verbose=       \t Enable more detailed output.\n'
         '\t\t\t\t\t\t\t This is set to False by default.\n')
-
-
-def run_cmd(cmd):
-    print(f'Running {cmd}')
-    return os.system(cmd)
 
 
 def main(argv):

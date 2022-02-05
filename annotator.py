@@ -238,14 +238,9 @@ def usage():
           'Images of faces to be split and annotated should be placed in \'resources/images/collected images\' folder.\n')
 
 
-def run_cmd(cmd):
-    print(f'Running {cmd}')
-    return os.system(cmd)
-
-
 def main():
     parser = OptionParser()
-    parser.add_option("-a", "--auto_annotate", action="store_true", default=False)
+    parser.add_option("-a", "--auto_annotate", action="store", default=True)
     parser.add_option("-p", "--training_percentage", action="store", default=0.8, type="float")
     parser.add_option("-m", "--max_images", action="store", default=-1, type="int")
     parser.add_option("-x", "--exclude_folders", action="store", default=[], type="string")

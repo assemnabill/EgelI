@@ -3,10 +3,7 @@ import configs
 import os
 from timeit import default_timer as timer
 
-
-def run_cmd(cmd):
-    print(f'Running {cmd}')
-    return os.system(cmd)
+from configurator import run_cmd
 
 
 def load_training_script():
