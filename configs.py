@@ -13,14 +13,13 @@ models_repo = {
 }
 
 pipeline_configs = None
-detection_model = None
 checkpoint = None
 training_enabled = False
 evaluation_enabled = False
 detection_enabled = False
 save_plots = False
 install_api = False
-generate_records = True
+generate_records = False
 random_detection = False
 report_average_test_scores = False
 verbose = False
