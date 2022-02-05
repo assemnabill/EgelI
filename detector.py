@@ -147,12 +147,11 @@ def detect_and_display_from_img(image_path, verbose=True, max_boxes=5):
         plt.savefig(f'{image_path}')
 
 
-def detect(test_images_path=None, max_boxes=5, verbose=False):
+def detect(max_boxes=5, verbose=False):
     init(verbose=verbose)
     print("Detection threshold set to", configs.detection_threshold)
     print("Random detection sequence set to", configs.random_detection)
-    if test_images_path is None:
-        test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
+    test_images_path = os.path.join(configs.paths["IMAGE_PATH"], "test")
     images = remove_non_images_files(os.listdir(test_images_path))
 
     if configs.random_detection:
