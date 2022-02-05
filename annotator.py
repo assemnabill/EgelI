@@ -53,13 +53,6 @@ def make_xml(folder_name, file_name, label, xml_path, image_path, width, height,
         f.write(xml_content)
 
 
-def make_copy_in_relevant_folder(testing_reached, label, org_file, i):
-    if testing_reached:
-        file_name = os.path.join(train_folder, label + "-" + str(i) + ".jpg")
-    else:
-        file_name = os.path.join(test_folder, label + "-" + str(i) + ".jpg")
-
-
 def detect_faces_opencv(img, images_to_locate=-1, do_show_image=False, min_faces_to_show=-1, scale_factor=1.3, min_neighbors=10):
     bounding_boxes = []
     # Draw rectangle around the faces
